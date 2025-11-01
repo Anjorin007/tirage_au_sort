@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIAD2 - Tirage au Sort 3D</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 50%, #16213e 100%);
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            color: #fff;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ========== HEADER CENTRAL ========== */
+        .header {
+            position: fixed;
+            top: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 30;
+            pointer-events: none;
+        }
+
+        .class-title {
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #FFE066, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2.5px;
+            font-family: 'Poppins', sans-serif;
+            text-shadow: 0 0 30px rgba(255, 224, 102, 0.15);
+        }
+
+        /* ========== TAB BUTTONS ========== */
+        .tab-button {
+            position: fixed;
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            border: none;
+            background: linear-gradient(135deg, rgba(255, 224, 102, 0.95), rgba(255, 165, 0, 0.95));
+            color: #1a1a2e;
+            font-weight: 800;
+            font-size: 28px;
+            cursor: pointer;
+            z-index: 35;
+            pointer-events: auto;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 12px 40px rgba(255, 224, 102, 0.3);
+            font-family: 'Poppins', sans-serif;
+            top: 28px;
+        }
+
+        .tab-button:hover {
+            transform: scale(1.12) translateY(-4px);
+            box-shadow: 0 18px 52px rgba(255, 224, 102, 0.5);
+        }
+
+        .tab-button:active {
+            transform: scale(0.98);
+        }
+
+        .tab-button-left {
+            left: 28px;
+        }
+
+        .tab-button-right {
+            right: 28px;
+        }
+
+        /* ========== PANELS ========== */
+        .panel {
+            position: fixed;
+            background: rgba(26, 26, 46, 0.93);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 224, 102, 0.2);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 224, 102, 0.1);
+            z-index: 25;
+            pointer-events: auto;
+        }
+
+        /* ========== LEFT PANEL STUDENTS ========== */
+        .left-panel {
+            left: 28px;
+            top: 120px;
+            width: 380px;
+            max-height: 70vh;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(-500px);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .left-panel.active {
+            transform: translateX(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* ========== RIGHT PANEL CONFIG ========== */
+        .right-panel {
+            right: 28px;
+            top: 120px;
+            width: 380px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            transform: translateX(500px);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .right-panel.active {
+            transform: translateX(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .panel-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            color: #FFE066;
+            font-weight: 800;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* ========== STUDENTS SECTION ========== */
+        .students-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255, 224, 102, 0.15);
+        }
+
+        .student-count {
+            font-size: 14px;
+            color: #FFE066;
+            font-weight: 700;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .edit-manage-btn {
+            padding: 10px 18px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Poppins', sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        .edit-manage-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .student-list {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .student-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .student-list::-webkit-scrollbar-track {
+            background: rgba(255, 224, 102, 0.06);
+            border-radius: 4px;
+        }
+
+        .student-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 224, 102, 0.35);
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .student-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 224, 102, 0.6);
+        }
+
+        .student-item {
+            padding: 14px 16px;
+            background: linear-gradient(135deg, rgba(255, 224, 102, 0.03), rgba(255, 224, 102, 0.01));
+            border: 1px solid rgba(255, 224, 102, 0.12);
+            border-radius: 12px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+            cursor: default;
+        }
+
+        .student-item:hover {
+            background: linear-gradient(135deg, rgba(255, 224, 102, 0.08), rgba(255, 224, 102, 0.04));
+            border-color: rgba(255, 224, 102, 0.25);
+            transform: translateX(4px);
+        }
+
+        .student-number {
+            font-weight: 800;
+            color: #FFE066;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 224, 102, 0.15);
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 12px;
+        }
+
+        .student-name {
+            flex: 1;
+            font-weight: 500;
+            color: #e8e8f0;
+            letter-spacing: 0.3px;
+        }
+
+        /* ========== CONFIG SECTION ========== */
+        .config-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #aaa;
+            font-weight: 700;
+        }
+
+        .input-group input {
+            padding: 12px 16px;
+            background: rgba(255, 224, 102, 0.06);
+            border: 1px solid rgba(255, 224, 102, 0.2);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #FFE066;
+            background: rgba(255, 224, 102, 0.1);
+            box-shadow: 0 0 16px rgba(255, 224, 102, 0.25);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 16px;
+            background: linear-gradient(135deg, #FFE066, #FFA500);
+            border: none;
+            border-radius: 11px;
+            color: #1a1a2e;
+            font-weight: 800;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-family: 'Poppins', sans-serif;
+            letter-spacing: 0.8px;
+            box-shadow: 0 8px 20px rgba(255, 224, 102, 0.2);
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 32px rgba(255, 224, 102, 0.4);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .progress-section {
+            padding: 16px;
+            background: rgba(255, 224, 102, 0.04);
+            border: 1px solid rgba(255, 224, 102, 0.12);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: #aaa;
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 7px;
+            background: rgba(255, 224, 102, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FFE066, #FFA500);
+            width: 0%;
+            transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-radius: 4px;
+            box-shadow: 0 0 12px rgba(255, 224, 102, 0.4);
+        }
+
+        /* ========== BOTTOM BASKET STATUS ========== */
+        .basket-status-container {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%) translateY(200px);
+            z-index: 24;
+            pointer-events: auto;
+            width: 92%;
+            max-width: 1400px;
+            background: rgba(26, 26, 46, 0.93);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 224, 102, 0.2);
+            border-radius: 24px;
+            padding: 24px 32px;
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 224, 102, 0.1);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .basket-status-container.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .basket-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            margin-bottom: 18px;
+            color: #FFE066;
+            font-weight: 800;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .basket-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+        }
+
+        .basket-item {
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(255, 224, 102, 0.03), rgba(255, 224, 102, 0.01));
+            border: 1px solid rgba(255, 224, 102, 0.12);
+            border-radius: 12px;
+            font-size: 12px;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .basket-item:hover {
+            background: linear-gradient(135deg, rgba(255, 224, 102, 0.08), rgba(255, 224, 102, 0.04));
+            border-color: rgba(255, 224, 102, 0.25);
+            transform: translateY(-4px);
+        }
+
+        .basket-item-name {
+            font-weight: 800;
+            color: #FFE066;
+            margin-bottom: 8px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .basket-item-fill {
+            font-size: 11px;
+            color: #aaa;
+            font-weight: 600;
+        }
+
+        /* ========== MODAL EDIT ========== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 200;
+            pointer-events: auto;
+        }
+
+        .modal-overlay.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .edit-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: rgba(26, 26, 46, 0.98);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 224, 102, 0.2);
+            border-radius: 28px;
+            padding: 44px;
+            width: 90%;
+            max-width: 520px;
+            z-index: 201;
+            max-height: 88vh;
+            overflow-y: auto;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .edit-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .edit-modal::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .edit-modal::-webkit-scrollbar-track {
+            background: rgba(255, 224, 102, 0.06);
+            border-radius: 4px;
+        }
+
+        .edit-modal::-webkit-scrollbar-thumb {
+            background: rgba(255, 224, 102, 0.35);
+            border-radius: 4px;
+        }
+
+        .edit-modal::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 224, 102, 0.6);
+        }
+
+        .edit-modal h2 {
+            font-size: 26px;
+            margin-bottom: 32px;
+            background: linear-gradient(135deg, #FFE066, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .edit-form-group {
+            margin-bottom: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .edit-form-group label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #aaa;
+            font-weight: 700;
+        }
+
+        .edit-form-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .edit-form-group input {
+            flex: 1;
+            padding: 12px 16px;
+            background: rgba(255, 224, 102, 0.06);
+            border: 1px solid rgba(255, 224, 102, 0.2);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .edit-form-group input:focus {
+            outline: none;
+            border-color: #FFE066;
+            background: rgba(255, 224, 102, 0.1);
+            box-shadow: 0 0 16px rgba(255, 224, 102, 0.25);
+        }
+
+        .delete-btn {
+            padding: 12px 12px !important;
+            background: #FF6B6B !important;
+            width: auto !important;
+            flex: none;
+            font-size: 16px;
+            margin: 0 !important;
+        }
+
+        .delete-btn:hover {
+            background: #FF5252 !important;
+            transform: translateY(-2px) !important;
+        }
+
+        .edit-button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 224, 102, 0.1);
+        }
+
+        .edit-button-group button {
+            flex: 1;
+            padding: 13px 20px;
+        }
+
+        .edit-cancel-btn {
+            background: rgba(255, 224, 102, 0.1) !important;
+            color: #FFE066;
+            border: 1px solid rgba(255, 224, 102, 0.25);
+            box-shadow: none !important;
+        }
+
+        .edit-cancel-btn:hover {
+            background: rgba(255, 224, 102, 0.15) !important;
+            box-shadow: 0 8px 20px rgba(255, 224, 102, 0.15) !important;
+        }
+
+        .add-new-btn {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, #4CAF50, #45a049) !important;
+            color: #fff !important;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.25) !important;
+        }
+
+        .add-new-btn:hover {
+            transform: translateY(-3px) !important;
+            box-shadow: 0 12px 28px rgba(76, 175, 80, 0.4) !important;
+        }
+
+        /* ========== MODAL RESULTS ========== */
+        .results-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: rgba(26, 26, 46, 0.98);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 224, 102, 0.2);
+            border-radius: 28px;
+            padding: 44px;
+            width: 90%;
+            max-width: 700px;
+            z-index: 201;
+            max-height: 88vh;
+            overflow-y: auto;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .results-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .results-modal::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .results-modal::-webkit-scrollbar-track {
+            background: rgba(255, 224, 102, 0.06);
+        }
+
+        .results-modal::-webkit-scrollbar-thumb {
+            background: rgba(255, 224, 102, 0.35);
+            border-radius: 4px;
+        }
+
+        .results-modal h2 {
+            font-size: 28px;
+            margin-bottom: 32px;
+            background: linear-gradient(135deg, #FFE066, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .group-result {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(255, 224, 102, 0.06), rgba(255, 224, 102, 0.02));
+            border: 1px solid rgba(255, 224, 102, 0.15);
+            border-left: 4px solid #FFE066;
+            border-radius: 14px;
+            transition: all 0.3s;
+        }
+
+        .group-result:hover {
+            background: linear-gradient(135deg, rgba(255, 224, 102, 0.1), rgba(255, 224, 102, 0.05));
+            border-color: rgba(255, 224, 102, 0.3);
+            transform: translateX(4px);
+        }
+
+        .group-result-title {
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: #FFE066;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+
+        .group-result-members {
+            font-size: 13px;
+            line-height: 2;
+            color: #ddd;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 224, 102, 0.1);
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 13px 20px;
+        }
+
+        .no-webgl {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(26, 26, 46, 0.98);
+            border: 2px solid #FF6B6B;
+            border-radius: 24px;
+            padding: 44px;
+            text-align: center;
+            max-width: 500px;
+            z-index: 1000;
+        }
+
+        .no-webgl h2 {
+            color: #FF6B6B;
+            margin-bottom: 18px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .no-webgl p {
+            color: #ddd;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .class-title {
+                font-size: 32px;
+            }
+
+            .tab-button {
+                width: 56px;
+                height: 56px;
+                font-size: 24px;
+            }
+
+            .left-panel,
+            .right-panel {
+                width: 320px;
+                max-height: 60vh;
+                padding: 24px;
+                top: 110px;
+            }
+
+            .basket-status-container {
+                width: 96%;
+                padding: 18px 24px;
+                bottom: 18px;
+            }
+
+            .basket-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .edit-modal,
+            .results-modal {
+                width: 95%;
+                padding: 32px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+
+    <!-- HEADER CENTRAL -->
+    <div class="header">
+        <div class="class-title">🎲 MIAD2</div>
+    </div>
+
+    <!-- TAB BUTTONS -->
+    <button class="tab-button tab-button-left" onclick="app.toggleLeftPanel()" title="Afficher/Masquer Étudiants">👥</button>
+    <button class="tab-button tab-button-right" onclick="app.toggleRightPanel()" title="Afficher/Masquer Configuration">⚙️</button>
+
+    <!-- LEFT PANEL - STUDENTS -->
+    <div class="left-panel panel" id="leftPanel">
+        <div class="panel-title">📚 Étudiants</div>
+        <div class="students-header">
+            <div class="student-count">
+                <span id="studentCount">0</span> / <span id="maxStudents">13</span>
+            </div>
+            <button class="edit-manage-btn" onclick="app.openEditModal()">✏️ Gérer</button>
+        </div>
+        <div class="student-list" id="studentList"></div>
+    </div>
+
+    <!-- RIGHT PANEL - CONFIG -->
+    <div class="right-panel panel" id="rightPanel">
+        <div class="panel-title">🎮 Tirage au Sort</div>
+        <div class="config-group">
+            <div class="input-group">
+                <label>Nombre de groupes</label>
+                <input type="number" id="groupCount" min="2" max="6" value="4">
+            </div>
+            <div class="button-group">
+                <button id="startBtn" onclick="app.startDrawing()">🚀 Lancer</button>
+                <button id="resetBtn" onclick="app.resetDrawing()">↺ Reset</button>
+            </div>
+            <div class="progress-section">
+                <div class="progress-text">
+                    <span>Progression</span>
+                    <span><span id="progressCount">0</span>/<span id="totalCount">0</span></span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM BASKET STATUS -->
+    <div class="basket-status-container" id="basketStatusContainer">
+        <div class="basket-title">📊 État des Groupes</div>
+        <div class="basket-list" id="basketList"></div>
+    </div>
+
+    <!-- MODAL OVERLAY -->
+    <div class="modal-overlay" id="modalOverlay" onclick="app.closeEditModal()"></div>
+
+    <!-- EDIT MODAL -->
+    <div class="edit-modal" id="editModal">
+        <h2>✏️ Gérer les Étudiants</h2>
+        <div id="editFormContainer"></div>
+        <button class="add-new-btn" onclick="app.addNewStudent()">➕ Ajouter un étudiant</button>
+        <div class="edit-button-group">
+            <button class="edit-save-btn" onclick="app.saveChanges()">💾 Enregistrer</button>
+            <button class="edit-cancel-btn" onclick="app.closeEditModal()">Annuler</button>
+        </div>
+    </div>
+
+    <!-- RESULTS MODAL -->
+    <div class="results-modal" id="resultsModal">
+        <h2>🎉 Résultats du Tirage</h2>
+        <div id="resultsContainer"></div>
+        <div class="modal-buttons">
+            <button onclick="app.resetDrawing()">🔄 Nouveau tirage</button>
+            <button onclick="app.exportResults()">📥 Exporter CSV</button>
+        </div>
+    </div>
+
+    <!-- WEBGL ERROR -->
+    <div class="no-webgl">
+        <h2>⚠️ WebGL Non Supporté</h2>
+        <p>Votre navigateur ne supporte pas WebGL. Veuillez utiliser Chrome, Firefox, Edge ou Safari récent.</p>
+    </div>
+
+    <script>
+        // ========== APPLICATION PRINCIPALE ==========
+        const app = {
+            // Configuration
+            config: {
+                defaultStudents: [
+                    "AGO Immaculée", "DRAMANE Hamzath", "GANDONOU Promise", "GOZO Jaurès",
+                    "HOUSSOU Carmel", "KPAKATIA Aziz", "NOUGBOLOGNI Valentin", "OGOUCHINA Nora",
+                    "OUSSA Méchad", 
+                ]
+            },
+
+            // État
+            state: {
+                students: [],
+                editingStudents: [],
+                scene: null,
+                camera: null,
+                renderer: null,
+                nameCards: [],
+                baskets: [],
+                isDrawing: false
+            },
+
+            // ========== INITIALISATION ==========
+            init() {
+                if (!this.checkWebGL()) {
+                    document.querySelector('.no-webgl').style.display = 'block';
+                    return;
+                }
+
+                this.state.students = [...this.config.defaultStudents];
+                this.initScene();
+                this.updateStudentList();
+                const numGroups = parseInt(document.getElementById('groupCount').value);
+                this.initializeScene(numGroups);
+                this.animate();
+
+                console.log('🎲 MIAD2 Randomizer Initialized');
+                console.log('👥 Students:', this.state.students);
+            },
+
+            checkWebGL() {
+                try {
+                    const canvas = document.createElement('canvas');
+                    return !!(window.WebGLRenderingContext && 
+                        (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+                } catch (e) {
+                    return false;
+                }
+            },
+
+            // ========== SCENE 3D ==========
+            initScene() {
+                const container = document.getElementById('canvas-container');
+                this.state.scene = new THREE.Scene();
+                this.state.scene.background = new THREE.Color(0x0f0f1e);
+                this.state.scene.fog = new THREE.Fog(0x16213e, 60, 220);
+
+                this.state.camera = new THREE.PerspectiveCamera(
+                    60, 
+                    window.innerWidth / window.innerHeight, 
+                    0.1, 
+                    1000
+                );
+                this.state.camera.position.set(0, 12, 15);
+                this.state.camera.lookAt(0, 0, 0);
+
+                this.state.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                this.state.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.state.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                this.state.renderer.shadowMap.enabled = true;
+                this.state.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                container.appendChild(this.state.renderer.domElement);
+
+                // Lighting
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                this.state.scene.add(ambientLight);
+
+                const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1);
+                directionalLight1.position.set(12, 18, 12);
+                directionalLight1.castShadow = true;
+                directionalLight1.shadow.mapSize.width = 2048;
+                directionalLight1.shadow.mapSize.height = 2048;
+                directionalLight1.shadow.camera.far = 100;
+                this.state.scene.add(directionalLight1);
+
+                const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.3);
+                directionalLight2.position.set(-12, 12, -12);
+                this.state.scene.add(directionalLight2);
+
+                // Ground
+                const groundGeometry = new THREE.PlaneGeometry(50, 50);
+                const groundMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x1a1a2e,
+                    roughness: 0.9,
+                    metalness: 0.05
+                });
+                const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+                ground.rotation.x = -Math.PI / 2;
+                ground.position.y = -1.5;
+                ground.receiveShadow = true;
+                this.state.scene.add(ground);
+
+                window.addEventListener('resize', () => this.onWindowResize());
+                window.addEventListener('keydown', (e) => this.onKeyDown(e));
+            },
+
+            createNameCard(studentName, index, total) {
+                const geometry = new THREE.BoxGeometry(2.5, 1.8, 0.12);
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = 1024;
+                canvas.height = 512;
+                const ctx = canvas.getContext('2d');
+                
+                const gradient = ctx.createLinearGradient(0, 0, 1024, 512);
+                gradient.addColorStop(0, '#ffffff');
+                gradient.addColorStop(1, '#f5f5f5');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 1024, 512);
+                
+                ctx.strokeStyle = 'rgba(255, 224, 102, 0.25)';
+                ctx.lineWidth = 4;
+                ctx.strokeRect(12, 12, 1000, 488);
+                
+                ctx.fillStyle = 'rgba(26, 26, 46, 0.08)';
+                ctx.font = 'bold 92px Poppins';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(studentName, 516, 268);
+                
+                ctx.fillStyle = '#1a1a2e';
+                ctx.fillText(studentName, 512, 256);
+                
+                const texture = new THREE.CanvasTexture(canvas);
+                texture.minFilter = THREE.LinearFilter;
+                texture.magFilter = THREE.LinearFilter;
+                
+                const material = new THREE.MeshStandardMaterial({
+                    map: texture,
+                    metalness: 0.1,
+                    roughness: 0.15,
+                    emissive: 0x000000,
+                    emissiveIntensity: 0
+                });
+                
+                const card = new THREE.Mesh(geometry, material);
+                card.castShadow = true;
+                card.receiveShadow = true;
+
+                const ropeGeometry = new THREE.CylinderGeometry(0.025, 0.025, 5.5, 12);
+                const ropeMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x888888,
+                    roughness: 0.4,
+                    metalness: 0.2
+                });
+                const rope = new THREE.Mesh(ropeGeometry, ropeMaterial);
+
+                const angle = (index / Math.max(total - 1, 1)) * Math.PI - Math.PI / 2;
+                const radius = 12;
+                card.position.set(Math.cos(angle) * radius, 8.5, Math.sin(angle) * radius);
+                rope.position.copy(card.position);
+                rope.position.y += 3;
+
+                const group = new THREE.Group();
+                group.add(card);
+                group.add(rope);
+                this.state.scene.add(group);
+
+                return { card, rope, group, name: studentName };
+            },
+
+            createBasket(index, totalBaskets) {
+                const geometry = new THREE.CylinderGeometry(1.6, 1.3, 2.2, 28);
+                const material = new THREE.MeshStandardMaterial({
+                    color: 0x8B5A2B,
+                    roughness: 0.75,
+                    metalness: 0.05,
+                    emissive: 0x6B4423,
+                    emissiveIntensity: 0
+                });
+                
+                const basket = new THREE.Mesh(geometry, material);
+                basket.castShadow = true;
+                basket.receiveShadow = true;
+
+                const handleGeometry = new THREE.TorusGeometry(0.38, 0.065, 10, 28, Math.PI);
+                const handleMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x6B4423,
+                    roughness: 0.8,
+                    metalness: 0.05
+                });
+                
+                const handleLeft = new THREE.Mesh(handleGeometry, handleMaterial);
+                const handleRight = new THREE.Mesh(handleGeometry, handleMaterial);
+                
+                handleLeft.position.set(-1.5, 1.2, 0);
+                handleLeft.rotation.z = Math.PI / 2;
+                handleLeft.castShadow = true;
+                
+                handleRight.position.set(1.5, 1.2, 0);
+                handleRight.rotation.z = Math.PI / 2;
+                handleRight.castShadow = true;
+
+                basket.add(handleLeft);
+                basket.add(handleRight);
+
+                const spacing = 5;
+                const totalWidth = (totalBaskets - 1) * spacing;
+                basket.position.set(index * spacing - totalWidth / 2, 1, -8);
+
+                this.state.scene.add(basket);
+
+                return { mesh: basket, students: [], capacity: 0 };
+            },
+
+            initializeScene(numGroups) {
+                this.state.nameCards = this.state.students.map((name, i) => 
+                    this.createNameCard(name, i, this.state.students.length)
+                );
+                this.state.baskets = Array(numGroups).fill(0).map((_, i) => 
+                    this.createBasket(i, numGroups)
+                );
+            },
+
+            // ========== UI UPDATES ==========
+            updateStudentList() {
+                const container = document.getElementById('studentList');
+                container.innerHTML = '';
+                
+                this.state.students.forEach((name, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'student-item';
+                    
+                    const number = document.createElement('span');
+                    number.className = 'student-number';
+                    number.textContent = index + 1;
+                    
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'student-name';
+                    nameSpan.textContent = name;
+                    
+                    div.appendChild(number);
+                    div.appendChild(nameSpan);
+                    container.appendChild(div);
+                });
+                
+                document.getElementById('studentCount').textContent = this.state.students.length;
+                document.getElementById('totalCount').textContent = this.state.students.length;
+            },
+
+            updateBasketStatus() {
+                const container = document.getElementById('basketList');
+                container.innerHTML = '';
+                
+                this.state.baskets.forEach((b, i) => {
+                    const div = document.createElement('div');
+                    div.className = 'basket-item';
+                    
+                    const name = document.createElement('div');
+                    name.className = 'basket-item-name';
+                    name.textContent = `📦 Groupe ${i + 1}`;
+                    
+                    const fill = document.createElement('div');
+                    fill.className = 'basket-item-fill';
+                    fill.textContent = `${b.students.length}/${b.capacity} étud.`;
+                    
+                    div.appendChild(name);
+                    div.appendChild(fill);
+                    container.appendChild(div);
+                });
+
+                document.getElementById('basketStatusContainer').classList.add('active');
+            },
+
+            updateProgress(count) {
+                document.getElementById('progressCount').textContent = count;
+                const percent = (count / this.state.students.length) * 100;
+                document.getElementById('progressFill').style.width = percent + '%';
+            },
+
+            // ========== PANEL TOGGLES ==========
+            toggleLeftPanel() {
+                document.getElementById('leftPanel').classList.toggle('active');
+                document.getElementById('rightPanel').classList.remove('active');
+            },
+
+            toggleRightPanel() {
+                document.getElementById('rightPanel').classList.toggle('active');
+                document.getElementById('leftPanel').classList.remove('active');
+            },
+
+            // ========== EDIT MODAL ==========
+            openEditModal() {
+                if (this.state.isDrawing) return;
+                this.state.editingStudents = [...this.state.students];
+                this.renderEditForm();
+                document.getElementById('modalOverlay').classList.add('active');
+                document.getElementById('editModal').classList.add('active');
+            },
+
+            closeEditModal() {
+                document.getElementById('modalOverlay').classList.remove('active');
+                document.getElementById('editModal').classList.remove('active');
+            },
+
+            renderEditForm() {
+                const container = document.getElementById('editFormContainer');
+                container.innerHTML = '';
+                
+                this.state.editingStudents.forEach((name, index) => {
+                    const group = document.createElement('div');
+                    group.className = 'edit-form-group';
+                    
+                    const label = document.createElement('label');
+                    label.textContent = `Étudiant ${index + 1}`;
+                    
+                    const inputContainer = document.createElement('div');
+                    inputContainer.className = 'edit-form-container';
+                    
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = name;
+                    input.onchange = (e) => this.state.editingStudents[index] = e.target.value.trim();
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.textContent = '✕';
+                    deleteBtn.onclick = () => {
+                        this.state.editingStudents.splice(index, 1);
+                        this.renderEditForm();
+                    };
+                    
+                    inputContainer.appendChild(input);
+                    inputContainer.appendChild(deleteBtn);
+                    group.appendChild(label);
+                    group.appendChild(inputContainer);
+                    container.appendChild(group);
+                });
+            },
+
+            addNewStudent() {
+                this.state.editingStudents.push('Nouvel Étudiant');
+                this.renderEditForm();
+            },
+
+            saveChanges() {
+                this.state.editingStudents = this.state.editingStudents.filter(name => name.trim() !== '');
+                if (this.state.editingStudents.length === 0) {
+                    alert('Au moins 1 étudiant requis!');
+                    return;
+                }
+                
+                this.state.students = this.state.editingStudents;
+                this.updateStudentList();
+                this.closeEditModal();
+                
+                const numGroups = Math.min(parseInt(document.getElementById('groupCount').value), this.state.students.length);
+                document.getElementById('groupCount').value = numGroups;
+                this.resetDrawing();
+            },
+
+            // ========== ANIMATIONS ==========
+            async animateSelection(cardObj) {
+                return new Promise(resolve => {
+                    const tl = gsap.timeline({ onComplete: resolve });
+                    
+                    tl.to(cardObj.card.material, {
+                        emissiveIntensity: 0.9,
+                        duration: 0.4,
+                        ease: "power2.out"
+                    }, 0);
+
+                    tl.to(cardObj.card.scale, {
+                        x: 1.18,
+                        y: 1.18,
+                        z: 1.18,
+                        duration: 0.35,
+                        ease: "back.out"
+                    }, 0);
+
+                    tl.to(cardObj.card.material, {
+                        emissiveIntensity: 0,
+                        duration: 0.35,
+                        ease: "power2.in"
+                    }, 0.4);
+
+                    tl.to(cardObj.card.scale, {
+                        x: 1,
+                        y: 1,
+                        z: 1,
+                        duration: 0.25,
+                        ease: "power2.out"
+                    }, 0.4);
+                });
+            },
+
+            async animateFall(cardObj, basketObj) {
+                return new Promise(resolve => {
+                    const basketPos = basketObj.mesh.position.clone();
+                    const endPos = new THREE.Vector3(basketPos.x, basketPos.y + 2.5, basketPos.z);
+
+                    const tl = gsap.timeline({ onComplete: resolve });
+
+                    tl.to(cardObj.rope.scale, { y: 0, duration: 0.25 }, 0);
+
+                    tl.to(cardObj.card.position, {
+                        x: endPos.x,
+                        y: endPos.y,
+                        z: endPos.z,
+                        duration: 1.8,
+                        ease: "power2.in"
+                    }, 0.25);
+
+                    tl.to(cardObj.card.rotation, {
+                        x: Math.PI * 4.5,
+                        y: Math.PI * 3.2,
+                        z: Math.PI * 1.8,
+                        duration: 1.8,
+                        ease: "sine.inOut"
+                    }, 0.25);
+
+                    tl.to(this.state.camera.position, {
+                        x: endPos.x * 0.35,
+                        y: endPos.y + 3.5,
+                        z: endPos.z + 6,
+                        duration: 1.8,
+                        ease: "power1.inOut"
+                    }, 0.25);
+
+                    tl.to(cardObj.card.position, {
+                        y: basketPos.y + 0.7,
+                        duration: 0.5,
+                        ease: "bounce.out"
+                    }, 2.05);
+
+                    tl.to(basketObj.mesh.position, {
+                        y: basketPos.y + 0.18,
+                        duration: 0.18,
+                        repeat: 1,
+                        yoyo: true
+                    }, 2.05);
+
+                    tl.to(this.state.camera.position, {
+                        x: 0,
+                        y: 12,
+                        z: 15,
+                        duration: 0.6,
+                        ease: "power2.inOut"
+                    }, 2.55);
+                });
+            },
+
+            async celebrateCompletion() {
+                return new Promise(resolve => {
+                    gsap.to(this.state.camera.position, {
+                        x: Math.sin(Date.now() * 0.001) * 22,
+                        y: 20,
+                        z: Math.cos(Date.now() * 0.001) * 22,
+                        duration: 2.2,
+                        ease: "sine.inOut",
+                        onComplete: () => {
+                            this.state.camera.position.set(0, 12, 15);
+                            this.showResults();
+                            resolve();
+                        }
+                    });
+
+                    this.state.baskets.forEach((b, i) => {
+                        gsap.to(b.mesh.material, {
+                            emissiveIntensity: 0.6,
+                            duration: 0.6,
+                            delay: i * 0.12,
+                            repeat: 4,
+                            yoyo: true,
+                            ease: "power2.inOut"
+                        });
+                    });
+                });
+            },
+
+            // ========== DRAWING LOGIC ==========
+            calculateBalancedDistribution(totalStudents, numGroups) {
+                // Calculer la distribution équilibrée
+                const baseSize = Math.floor(totalStudents / numGroups);
+                const remainder = totalStudents % numGroups;
+                
+                // Créer un tableau avec les capacités équilibrées
+                const capacities = [];
+                for (let i = 0; i < numGroups; i++) {
+                    // Les premiers groupes (remainder) auront +1 personne
+                    capacities.push(i < remainder ? baseSize + 1 : baseSize);
+                }
+                
+                // Mélanger les capacités pour plus de réalisme
+                for (let i = capacities.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [capacities[i], capacities[j]] = [capacities[j], capacities[i]];
+                }
+                
+                return capacities;
+            },
+
+            async startLiveDrawing(numGroups) {
+                this.state.isDrawing = true;
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('resetBtn').disabled = true;
+                document.getElementById('leftPanel').classList.remove('active');
+                document.getElementById('rightPanel').classList.remove('active');
+
+                let availableStudents = [...Array(this.state.students.length)].map((_, i) => i);
+                
+                // Calculer les capacités équilibrées
+                const capacities = this.calculateBalancedDistribution(this.state.students.length, numGroups);
+                
+                this.state.baskets.forEach((b, i) => {
+                    b.students = [];
+                    b.capacity = capacities[i];
+                });
+
+                // ========== PHASE 1: SHUFFLE ANIMATION ==========
+                await this.shufflePhase();
+
+                let drawn = 0;
+
+                // ========== PHASE 2: TIRAGE RÉEL - UNE CARTE À LA FOIS ==========
+                while (availableStudents.length > 0) {
+                    const randomIdx = Math.floor(Math.random() * availableStudents.length);
+                    const studentIdx = availableStudents[randomIdx];
+                    const cardObj = this.state.nameCards[studentIdx];
+
+                    // Filtrer les paniers avec de la place
+                    const availableBaskets = this.state.baskets.filter(b => b.students.length < b.capacity);
+                    if (availableBaskets.length === 0) break;
+
+                    // Choisir un panier aléatoire parmi les disponibles
+                    const basketIdx = Math.floor(Math.random() * availableBaskets.length);
+                    const targetBasket = availableBaskets[basketIdx];
+
+                    // Dessiner la carte (tombe dans le panier)
+                    await this.drawCardSequence(cardObj, targetBasket, drawn);
+
+                    targetBasket.students.push(this.state.students[studentIdx]);
+                    availableStudents.splice(randomIdx, 1);
+                    
+                    drawn++;
+                    this.updateProgress(drawn);
+                    this.updateBasketStatus();
+
+                    await new Promise(r => setTimeout(r, 400));
+                }
+
+                await this.celebrateCompletion();
+
+                this.state.isDrawing = false;
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('resetBtn').disabled = false;
+            },
+
+            async shufflePhase() {
+                const shuffleDuration = 3.5; // 3.5 secondes
+                const startTime = Date.now();
+                const cardsToDraw = [...this.state.nameCards]; // Copie pour garder trace
+                const drawnCards = [];
+                
+                return new Promise(resolve => {
+                    const shuffleInterval = setInterval(() => {
+                        const elapsed = Date.now() - startTime;
+                        
+                        if (elapsed >= shuffleDuration * 1000) {
+                            clearInterval(shuffleInterval);
+                            
+                            // Remettre toutes les cartes à leur position initiale
+                            this.state.nameCards.forEach((c, index) => {
+                                const angle = (index / Math.max(this.state.students.length - 1, 1)) * Math.PI - Math.PI / 2;
+                                const radius = 12;
+                                c.card.position.set(Math.cos(angle) * radius, 8.5, Math.sin(angle) * radius);
+                                c.card.rotation.set(0, 0, 0);
+                                c.rope.scale.y = 1;
+                            });
+                            
+                            resolve();
+                            return;
+                        }
+
+                        // Mélange continue avec vitesse accélérée
+                        const progress = elapsed / (shuffleDuration * 1000);
+                        const speedMultiplier = 1 + progress * 1.5; // Accélération progressive
+                        
+                        this.state.nameCards.forEach((c, index) => {
+                            const randomRotation = (Math.random() - 0.5) * 0.8;
+                            const randomPosX = (Math.random() - 0.5) * 0.4;
+                            const randomPosZ = (Math.random() - 0.5) * 0.4;
+                            
+                            c.card.rotation.x = randomRotation * 0.3;
+                            c.card.rotation.z = randomRotation + Math.sin(elapsed * 0.008) * 0.15;
+                            c.card.position.x += randomPosX;
+                            c.card.position.z += randomPosZ;
+                        });
+
+                        // Rotation autour du centre avec accélération
+                        this.state.nameCards.forEach((c, index) => {
+                            const angle = (elapsed / 1000) * (Math.PI * 2) * 2 * speedMultiplier;
+                            const baseAngle = (index / Math.max(this.state.students.length - 1, 1)) * Math.PI - Math.PI / 2;
+                            const radius = 12 + Math.sin(elapsed * 0.005) * 1.2;
+                            
+                            c.card.position.x = Math.cos(baseAngle + angle) * radius;
+                            c.card.position.z = Math.sin(baseAngle + angle) * radius;
+                            
+                            // Spin vertical rapide avec accélération
+                            c.card.rotation.y += 0.18 * speedMultiplier;
+                        });
+                    }, 16); // ~60fps
+                });
+            },
+
+            async drawCardSequence(cardObj, basketObj, index) {
+                const basketPos = basketObj.mesh.position.clone();
+                const endPos = new THREE.Vector3(basketPos.x, basketPos.y + 2.5, basketPos.z);
+
+                return new Promise(resolve => {
+                    const tl = gsap.timeline({ onComplete: resolve });
+
+                    // Sélection rapide
+                    tl.to(cardObj.card.material, {
+                        emissiveIntensity: 1,
+                        duration: 0.3,
+                        ease: "power2.out"
+                    }, 0);
+
+                    tl.to(cardObj.card.scale, {
+                        x: 1.2,
+                        y: 1.2,
+                        z: 1.2,
+                        duration: 0.25,
+                        ease: "back.out"
+                    }, 0);
+
+                    // Corde disparaît
+                    tl.to(cardObj.rope.scale, { y: 0, duration: 0.2 }, 0.1);
+
+                    // Chute dans le panier
+                    tl.to(cardObj.card.position, {
+                        x: endPos.x,
+                        y: endPos.y,
+                        z: endPos.z,
+                        duration: 1.2,
+                        ease: "power2.in"
+                    }, 0.3);
+
+                    tl.to(cardObj.card.rotation, {
+                        x: Math.PI * 5,
+                        y: Math.PI * 3.5,
+                        z: Math.PI * 2,
+                        duration: 1.2,
+                        ease: "sine.inOut"
+                    }, 0.3);
+
+                    // Bounce dans le panier
+                    tl.to(cardObj.card.position, {
+                        y: basketPos.y + 0.7,
+                        duration: 0.4,
+                        ease: "bounce.out"
+                    }, 1.5);
+
+                    tl.to(basketObj.mesh.position, {
+                        y: basketPos.y + 0.15,
+                        duration: 0.15,
+                        repeat: 1,
+                        yoyo: true
+                    }, 1.5);
+                });
+            },
+
+            startDrawing() {
+                if (this.state.isDrawing || this.state.students.length < 2) {
+                    alert('Minimum 2 étudiants requis!');
+                    return;
+                }
+                
+                const numGroups = parseInt(document.getElementById('groupCount').value);
+                if (numGroups < 2 || numGroups > 6) {
+                    alert('Nombre de groupes: 2-6');
+                    return;
+                }
+
+                if (numGroups > this.state.students.length) {
+                    alert(`Maximum ${this.state.students.length} groupes possibles!`);
+                    return;
+                }
+
+                this.resetDrawing();
+                
+                setTimeout(() => {
+                    this.state.baskets = this.state.baskets.slice(0, numGroups);
+                    this.startLiveDrawing(numGroups);
+                }, 400);
+            },
+
+            resetDrawing() {
+                if (this.state.isDrawing) return;
+
+                this.state.nameCards.forEach(c => {
+                    if (this.state.scene.getObjectByProperty('uuid', c.group.uuid)) {
+                        this.state.scene.remove(c.group);
+                    }
+                });
+
+                this.state.nameCards = [];
+                this.state.baskets.forEach(b => {
+                    if (this.state.scene.getObjectByProperty('uuid', b.mesh.uuid)) {
+                        this.state.scene.remove(b.mesh);
+                    }
+                });
+                this.state.baskets = [];
+
+                document.getElementById('resultsModal').classList.remove('active');
+                document.getElementById('modalOverlay').classList.remove('active');
+                document.getElementById('basketStatusContainer').classList.remove('active');
+                document.getElementById('progressCount').textContent = '0';
+                document.getElementById('progressFill').style.width = '0%';
+
+                const numGroups = parseInt(document.getElementById('groupCount').value);
+                this.initializeScene(numGroups);
+            },
+
+            showResults() {
+                const container = document.getElementById('resultsContainer');
+                container.innerHTML = '';
+                
+                this.state.baskets.forEach((b, i) => {
+                    const div = document.createElement('div');
+                    div.className = 'group-result';
+                    
+                    const title = document.createElement('div');
+                    title.className = 'group-result-title';
+                    title.textContent = `📦 Groupe ${i + 1}`;
+                    
+                    const members = document.createElement('div');
+                    members.className = 'group-result-members';
+                    members.innerHTML = b.students.map((s, idx) => `${idx + 1}. ${s}`).join('<br>');
+                    
+                    div.appendChild(title);
+                    div.appendChild(members);
+                    container.appendChild(div);
+                });
+                
+                document.getElementById('modalOverlay').classList.add('active');
+                document.getElementById('resultsModal').classList.add('active');
+            },
+
+            exportResults() {
+                let csv = "Groupe,Nombres,Étudiants\n";
+                this.state.baskets.forEach((b, i) => {
+                    csv += `"Groupe ${i + 1}","${b.students.length}","${b.students.join('; ')}"\n`;
+                });
+                
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `MIAD2-groupes-${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+            },
+
+            // ========== RENDER LOOP ==========
+            animate() {
+                requestAnimationFrame(() => this.animate());
+
+                this.state.nameCards.forEach((c, i) => {
+                    if (!this.state.isDrawing || c.card.position.y > 2) {
+                        c.card.rotation.z = Math.sin(Date.now() * 0.0004 + i * 0.6) * 0.045;
+                    }
+                });
+
+                this.state.renderer.render(this.state.scene, this.state.camera);
+            },
+
+            // ========== WINDOW EVENTS ==========
+            onWindowResize() {
+                this.state.camera.aspect = window.innerWidth / window.innerHeight;
+                this.state.camera.updateProjectionMatrix();
+                this.state.renderer.setSize(window.innerWidth, window.innerHeight);
+            },
+
+            onKeyDown(e) {
+                if (e.code === 'Space' && !this.state.isDrawing) {
+                    e.preventDefault();
+                    this.startDrawing();
+                }
+                if (e.code === 'KeyR' && !this.state.isDrawing) {
+                    this.resetDrawing();
+                }
+            }
+        };
+
+        // ========== DÉMARRAGE ==========
+        app.init();
+    </script>
+</body>
+</html>
