@@ -38,7 +38,7 @@
         /* ========== HEADER CENTRAL ========== */
         .header {
             position: fixed;
-            top: 28px;
+            top: clamp(12px, 4vw, 28px);
             left: 50%;
             transform: translateX(-50%);
             z-index: 30;
@@ -46,13 +46,13 @@
         }
 
         .class-title {
-            font-size: 42px;
+            font-size: clamp(24px, 8vw, 42px);
             font-weight: 800;
             background: linear-gradient(135deg, #FFE066, #FFA500);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            letter-spacing: 2.5px;
+            letter-spacing: clamp(1px, 1vw, 2.5px);
             font-family: 'Poppins', sans-serif;
             text-shadow: 0 0 30px rgba(255, 224, 102, 0.15);
         }
@@ -60,21 +60,21 @@
         /* ========== TAB BUTTONS ========== */
         .tab-button {
             position: fixed;
-            width: 64px;
-            height: 64px;
-            border-radius: 16px;
+            width: clamp(48px, 12vw, 64px);
+            height: clamp(48px, 12vw, 64px);
+            border-radius: 12px;
             border: none;
             background: linear-gradient(135deg, rgba(255, 224, 102, 0.95), rgba(255, 165, 0, 0.95));
             color: #1a1a2e;
             font-weight: 800;
-            font-size: 28px;
+            font-size: clamp(20px, 5vw, 28px);
             cursor: pointer;
             z-index: 35;
             pointer-events: auto;
             transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
             box-shadow: 0 12px 40px rgba(255, 224, 102, 0.3);
             font-family: 'Poppins', sans-serif;
-            top: 28px;
+            top: clamp(12px, 4vw, 28px);
         }
 
         .tab-button:hover {
@@ -87,11 +87,11 @@
         }
 
         .tab-button-left {
-            left: 28px;
+            left: clamp(12px, 3vw, 28px);
         }
 
         .tab-button-right {
-            right: 28px;
+            right: clamp(12px, 3vw, 28px);
         }
 
         /* ========== PANELS ========== */
@@ -100,8 +100,8 @@
             background: rgba(26, 26, 46, 0.93);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 224, 102, 0.2);
-            border-radius: 24px;
-            padding: 32px;
+            border-radius: 20px;
+            padding: clamp(18px, 4vw, 32px);
             box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 224, 102, 0.1);
             z-index: 25;
             pointer-events: auto;
@@ -109,10 +109,10 @@
 
         /* ========== LEFT PANEL STUDENTS ========== */
         .left-panel {
-            left: 28px;
-            top: 120px;
-            width: 380px;
-            max-height: 70vh;
+            left: clamp(12px, 3vw, 28px);
+            top: clamp(80px, 15vh, 120px);
+            width: min(90vw, 380px);
+            max-height: calc(100vh - 200px);
             display: flex;
             flex-direction: column;
             transform: translateX(-500px);
@@ -129,12 +129,12 @@
 
         /* ========== RIGHT PANEL CONFIG ========== */
         .right-panel {
-            right: 28px;
-            top: 120px;
-            width: 380px;
+            right: clamp(12px, 3vw, 28px);
+            top: clamp(80px, 15vh, 120px);
+            width: min(90vw, 380px);
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: clamp(14px, 3vw, 24px);
             transform: translateX(500px);
             opacity: 0;
             pointer-events: none;
@@ -148,9 +148,9 @@
         }
 
         .panel-title {
-            font-size: 11px;
+            font-size: clamp(9px, 2vw, 11px);
             text-transform: uppercase;
-            letter-spacing: 2.5px;
+            letter-spacing: clamp(1.5px, 2vw, 2.5px);
             color: #FFE066;
             font-weight: 800;
             font-family: 'Poppins', sans-serif;
@@ -161,26 +161,28 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 18px;
-            padding-bottom: 14px;
+            margin-bottom: clamp(12px, 2vw, 18px);
+            padding-bottom: clamp(10px, 2vw, 14px);
             border-bottom: 1px solid rgba(255, 224, 102, 0.15);
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .student-count {
-            font-size: 14px;
+            font-size: clamp(12px, 2vw, 14px);
             color: #FFE066;
             font-weight: 700;
             font-family: 'Poppins', sans-serif;
         }
 
         .edit-manage-btn {
-            padding: 10px 18px;
+            padding: clamp(8px, 2vw, 10px) clamp(12px, 2vw, 18px);
             background: linear-gradient(135deg, #4CAF50, #45a049);
             border: none;
             border-radius: 10px;
             color: #fff;
             font-weight: 700;
-            font-size: 12px;
+            font-size: clamp(10px, 1.5vw, 12px);
             cursor: pointer;
             transition: all 0.3s;
             font-family: 'Poppins', sans-serif;
@@ -195,10 +197,10 @@
         .student-list {
             flex: 1;
             overflow-y: auto;
-            padding-right: 10px;
+            padding-right: 8px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: clamp(6px, 1vw, 10px);
         }
 
         .student-list::-webkit-scrollbar {
@@ -221,14 +223,14 @@
         }
 
         .student-item {
-            padding: 14px 16px;
+            padding: clamp(10px, 2vw, 14px) clamp(12px, 2vw, 16px);
             background: linear-gradient(135deg, rgba(255, 224, 102, 0.03), rgba(255, 224, 102, 0.01));
             border: 1px solid rgba(255, 224, 102, 0.12);
-            border-radius: 12px;
-            font-size: 13px;
+            border-radius: 10px;
+            font-size: clamp(11px, 2vw, 13px);
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             transition: all 0.3s;
             cursor: default;
         }
@@ -244,6 +246,7 @@
             color: #FFE066;
             width: 28px;
             height: 28px;
+            min-width: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -258,23 +261,24 @@
             font-weight: 500;
             color: #e8e8f0;
             letter-spacing: 0.3px;
+            word-break: break-word;
         }
 
         /* ========== CONFIG SECTION ========== */
         .config-group {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: clamp(8px, 2vw, 10px);
         }
 
         .input-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: clamp(6px, 1vw, 8px);
         }
 
         .input-group label {
-            font-size: 11px;
+            font-size: clamp(9px, 1.5vw, 11px);
             text-transform: uppercase;
             letter-spacing: 1.5px;
             color: #aaa;
@@ -282,12 +286,12 @@
         }
 
         .input-group input {
-            padding: 12px 16px;
+            padding: clamp(10px, 2vw, 12px) clamp(12px, 2vw, 16px);
             background: rgba(255, 224, 102, 0.06);
             border: 1px solid rgba(255, 224, 102, 0.2);
-            border-radius: 10px;
+            border-radius: 8px;
             color: #fff;
-            font-size: 14px;
+            font-size: clamp(12px, 2vw, 14px);
             font-family: 'Poppins', sans-serif;
             font-weight: 600;
             transition: all 0.3s;
@@ -302,19 +306,21 @@
 
         .button-group {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             width: 100%;
+            flex-wrap: wrap;
         }
 
         button {
             flex: 1;
-            padding: 14px 16px;
+            min-width: 100px;
+            padding: clamp(12px, 2.5vw, 14px) clamp(12px, 2vw, 16px);
             background: linear-gradient(135deg, #FFE066, #FFA500);
             border: none;
-            border-radius: 11px;
+            border-radius: 10px;
             color: #1a1a2e;
             font-weight: 800;
-            font-size: 13px;
+            font-size: clamp(11px, 2vw, 13px);
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             font-family: 'Poppins', sans-serif;
@@ -337,17 +343,17 @@
         }
 
         .progress-section {
-            padding: 16px;
+            padding: clamp(12px, 2vw, 16px);
             background: rgba(255, 224, 102, 0.04);
             border: 1px solid rgba(255, 224, 102, 0.12);
-            border-radius: 12px;
+            border-radius: 10px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
 
         .progress-text {
-            font-size: 12px;
+            font-size: clamp(11px, 1.5vw, 12px);
             color: #aaa;
             display: flex;
             justify-content: space-between;
@@ -374,18 +380,18 @@
         /* ========== BOTTOM BASKET STATUS ========== */
         .basket-status-container {
             position: fixed;
-            bottom: 28px;
+            bottom: clamp(12px, 3vw, 28px);
             left: 50%;
             transform: translateX(-50%) translateY(200px);
             z-index: 24;
             pointer-events: auto;
-            width: 92%;
+            width: calc(100% - clamp(24px, 6vw, 56px));
             max-width: 1400px;
             background: rgba(26, 26, 46, 0.93);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 224, 102, 0.2);
-            border-radius: 24px;
-            padding: 24px 32px;
+            border-radius: 18px;
+            padding: clamp(16px, 3vw, 24px) clamp(18px, 4vw, 32px);
             box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 224, 102, 0.1);
             opacity: 0;
             pointer-events: none;
@@ -399,10 +405,10 @@
         }
 
         .basket-title {
-            font-size: 11px;
+            font-size: clamp(9px, 2vw, 11px);
             text-transform: uppercase;
-            letter-spacing: 2.5px;
-            margin-bottom: 18px;
+            letter-spacing: clamp(1.5px, 2vw, 2.5px);
+            margin-bottom: clamp(12px, 2vw, 18px);
             color: #FFE066;
             font-weight: 800;
             font-family: 'Poppins', sans-serif;
@@ -410,16 +416,16 @@
 
         .basket-list {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: clamp(10px, 2vw, 16px);
         }
 
         .basket-item {
-            padding: 16px;
+            padding: clamp(12px, 2vw, 16px);
             background: linear-gradient(135deg, rgba(255, 224, 102, 0.03), rgba(255, 224, 102, 0.01));
             border: 1px solid rgba(255, 224, 102, 0.12);
-            border-radius: 12px;
-            font-size: 12px;
+            border-radius: 10px;
+            font-size: clamp(11px, 1.5vw, 12px);
             transition: all 0.3s;
             text-align: center;
         }
@@ -433,12 +439,13 @@
         .basket-item-name {
             font-weight: 800;
             color: #FFE066;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             font-family: 'Poppins', sans-serif;
+            font-size: clamp(10px, 1.5vw, 12px);
         }
 
         .basket-item-fill {
-            font-size: 11px;
+            font-size: clamp(9px, 1.3vw, 11px);
             color: #aaa;
             font-weight: 600;
         }
@@ -475,10 +482,9 @@
             background: rgba(26, 26, 46, 0.98);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 224, 102, 0.2);
-            border-radius: 28px;
-            padding: 44px;
-            width: 90%;
-            max-width: 520px;
+            border-radius: 20px;
+            padding: clamp(28px, 5vw, 44px);
+            width: min(95vw, 520px);
             z-index: 201;
             max-height: 88vh;
             overflow-y: auto;
@@ -513,8 +519,8 @@
         }
 
         .edit-modal h2 {
-            font-size: 26px;
-            margin-bottom: 32px;
+            font-size: clamp(20px, 5vw, 26px);
+            margin-bottom: clamp(20px, 4vw, 32px);
             background: linear-gradient(135deg, #FFE066, #FFA500);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -525,14 +531,14 @@
         }
 
         .edit-form-group {
-            margin-bottom: 22px;
+            margin-bottom: clamp(16px, 3vw, 22px);
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
 
         .edit-form-group label {
-            font-size: 11px;
+            font-size: clamp(9px, 1.5vw, 11px);
             text-transform: uppercase;
             letter-spacing: 1.5px;
             color: #aaa;
@@ -541,18 +547,20 @@
 
         .edit-form-container {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .edit-form-group input {
             flex: 1;
-            padding: 12px 16px;
+            min-width: 120px;
+            padding: clamp(10px, 2vw, 12px) clamp(12px, 2vw, 16px);
             background: rgba(255, 224, 102, 0.06);
             border: 1px solid rgba(255, 224, 102, 0.2);
-            border-radius: 10px;
+            border-radius: 8px;
             color: #fff;
-            font-size: 14px;
+            font-size: clamp(12px, 2vw, 14px);
             font-family: 'Inter', sans-serif;
             font-weight: 500;
             transition: all 0.3s;
@@ -566,12 +574,13 @@
         }
 
         .delete-btn {
-            padding: 12px 12px !important;
+            padding: clamp(10px, 2vw, 12px) clamp(10px, 2vw, 12px) !important;
             background: #FF6B6B !important;
             width: auto !important;
             flex: none;
             font-size: 16px;
             margin: 0 !important;
+            min-width: 44px;
         }
 
         .delete-btn:hover {
@@ -581,15 +590,17 @@
 
         .edit-button-group {
             display: flex;
-            gap: 12px;
-            margin-top: 32px;
-            padding-top: 24px;
+            gap: 8px;
+            margin-top: clamp(20px, 4vw, 32px);
+            padding-top: clamp(16px, 3vw, 24px);
             border-top: 1px solid rgba(255, 224, 102, 0.1);
+            flex-wrap: wrap;
         }
 
         .edit-button-group button {
             flex: 1;
-            padding: 13px 20px;
+            min-width: 100px;
+            padding: clamp(11px, 2vw, 13px) clamp(12px, 2vw, 20px);
         }
 
         .edit-cancel-btn {
@@ -606,11 +617,11 @@
 
         .add-new-btn {
             width: 100%;
-            padding: 13px;
+            padding: clamp(11px, 2vw, 13px);
             background: linear-gradient(135deg, #4CAF50, #45a049) !important;
             color: #fff !important;
-            margin-top: 20px;
-            margin-bottom: 20px;
+            margin-top: clamp(14px, 2vw, 20px);
+            margin-bottom: clamp(14px, 2vw, 20px);
             box-shadow: 0 8px 20px rgba(76, 175, 80, 0.25) !important;
         }
 
@@ -628,10 +639,9 @@
             background: rgba(26, 26, 46, 0.98);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 224, 102, 0.2);
-            border-radius: 28px;
-            padding: 44px;
-            width: 90%;
-            max-width: 700px;
+            border-radius: 20px;
+            padding: clamp(28px, 5vw, 44px);
+            width: min(95vw, 700px);
             z-index: 201;
             max-height: 88vh;
             overflow-y: auto;
@@ -661,8 +671,8 @@
         }
 
         .results-modal h2 {
-            font-size: 28px;
-            margin-bottom: 32px;
+            font-size: clamp(22px, 5vw, 28px);
+            margin-bottom: clamp(20px, 4vw, 32px);
             background: linear-gradient(135deg, #FFE066, #FFA500);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -673,12 +683,12 @@
         }
 
         .group-result {
-            margin-bottom: 20px;
-            padding: 20px;
+            margin-bottom: clamp(14px, 2vw, 20px);
+            padding: clamp(14px, 2vw, 20px);
             background: linear-gradient(135deg, rgba(255, 224, 102, 0.06), rgba(255, 224, 102, 0.02));
             border: 1px solid rgba(255, 224, 102, 0.15);
             border-left: 4px solid #FFE066;
-            border-radius: 14px;
+            border-radius: 12px;
             transition: all 0.3s;
         }
 
@@ -690,30 +700,32 @@
 
         .group-result-title {
             font-weight: 800;
-            margin-bottom: 12px;
+            margin-bottom: clamp(8px, 1vw, 12px);
             color: #FFE066;
             font-family: 'Poppins', sans-serif;
-            font-size: 14px;
+            font-size: clamp(12px, 2vw, 14px);
             letter-spacing: 0.5px;
         }
 
         .group-result-members {
-            font-size: 13px;
+            font-size: clamp(11px, 2vw, 13px);
             line-height: 2;
             color: #ddd;
         }
 
         .modal-buttons {
             display: flex;
-            gap: 12px;
-            margin-top: 32px;
-            padding-top: 24px;
+            gap: 8px;
+            margin-top: clamp(20px, 4vw, 32px);
+            padding-top: clamp(16px, 3vw, 24px);
             border-top: 1px solid rgba(255, 224, 102, 0.1);
+            flex-wrap: wrap;
         }
 
         .modal-buttons button {
             flex: 1;
-            padding: 13px 20px;
+            min-width: 120px;
+            padding: clamp(11px, 2vw, 13px) clamp(12px, 2vw, 20px);
         }
 
         .no-webgl {
@@ -724,59 +736,299 @@
             transform: translate(-50%, -50%);
             background: rgba(26, 26, 46, 0.98);
             border: 2px solid #FF6B6B;
-            border-radius: 24px;
-            padding: 44px;
+            border-radius: 20px;
+            padding: clamp(28px, 5vw, 44px);
             text-align: center;
-            max-width: 500px;
+            max-width: min(95vw, 500px);
             z-index: 1000;
         }
 
         .no-webgl h2 {
             color: #FF6B6B;
-            margin-bottom: 18px;
+            margin-bottom: clamp(14px, 2vw, 18px);
             font-family: 'Poppins', sans-serif;
-            font-size: 24px;
+            font-size: clamp(18px, 4vw, 24px);
             font-weight: 800;
         }
 
         .no-webgl p {
             color: #ddd;
             line-height: 1.6;
+            font-size: clamp(12px, 2vw, 14px);
         }
 
-        @media (max-width: 768px) {
-            .class-title {
-                font-size: 32px;
+        @media (max-width: 1024px) {
+            .basket-list {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             }
+        }
 
-            .tab-button {
-                width: 56px;
-                height: 56px;
-                font-size: 24px;
+        @media (max-width: 640px) {
+            body {
+                overflow-y: auto;
             }
 
             .left-panel,
             .right-panel {
-                width: 320px;
-                max-height: 60vh;
-                padding: 24px;
-                top: 110px;
+                position: fixed;
+                width: calc(100% - clamp(24px, 6vw, 56px));
+                max-width: 100%;
+                border-radius: 16px;
+                padding: clamp(16px, 3vw, 24px);
+                max-height: calc(100vh - 160px);
+            }
+
+            .left-panel {
+                left: clamp(12px, 3vw, 28px);
+                top: clamp(80px, 12vh, 100px);
+            }
+
+            .right-panel {
+                right: clamp(12px, 3vw, 28px);
+                top: clamp(80px, 12vh, 100px);
             }
 
             .basket-status-container {
-                width: 96%;
-                padding: 18px 24px;
-                bottom: 18px;
+                width: calc(100% - clamp(24px, 6vw, 56px));
+                padding: clamp(14px, 3vw, 18px) clamp(14px, 3vw, 24px);
+                bottom: clamp(12px, 2vw, 18px);
+                border-radius: 16px;
+            }
+
+            .basket-list {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                gap: clamp(8px, 2vw, 12px);
+            }
+
+            .basket-item {
+                padding: clamp(10px, 1.5vw, 12px);
+            }
+
+            .edit-modal,
+            .results-modal {
+                width: calc(100% - clamp(20px, 4vw, 40px));
+                max-width: 95vw;
+                padding: clamp(20px, 4vw, 32px);
+                max-height: 90vh;
+                top: 50%;
+            }
+
+            .modal-buttons,
+            .edit-button-group {
+                flex-direction: column;
+            }
+
+            .modal-buttons button,
+            .edit-button-group button {
+                width: 100%;
+                min-width: auto;
+            }
+
+            .edit-form-container {
+                flex-direction: column;
+            }
+
+            .edit-form-group input {
+                width: 100%;
+            }
+
+            .delete-btn {
+                width: 100% !important;
+            }
+
+            .group-result-members {
+                line-height: 1.8;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .class-title {
+                font-size: clamp(18px, 6vw, 28px);
+                letter-spacing: 0.5px;
+            }
+
+            .tab-button {
+                width: clamp(44px, 10vw, 52px);
+                height: clamp(44px, 10vw, 52px);
+                font-size: clamp(18px, 4vw, 24px);
+                border-radius: 10px;
+            }
+
+            .left-panel,
+            .right-panel {
+                width: calc(100% - 24px);
+                padding: clamp(14px, 2vw, 18px);
+                top: clamp(70px, 10vh, 90px);
+            }
+
+            .student-item {
+                padding: clamp(8px, 1.5vw, 10px) clamp(10px, 1.5vw, 12px);
+                gap: 8px;
+            }
+
+            .student-number {
+                width: 24px;
+                height: 24px;
+                min-width: 24px;
+                font-size: 10px;
+            }
+
+            .button-group {
+                gap: 6px;
+            }
+
+            button {
+                min-width: 80px;
+                padding: clamp(10px, 2vw, 12px) clamp(10px, 1.5vw, 12px);
+                font-size: clamp(10px, 1.5vw, 11px);
+            }
+
+            .basket-status-container {
+                width: calc(100% - 16px);
+                padding: clamp(12px, 2vw, 16px) clamp(12px, 2vw, 16px);
+                bottom: clamp(8px, 1.5vw, 12px);
+                left: 8px;
+                transform: translateX(0) translateY(200px);
+            }
+
+            .basket-status-container.active {
+                transform: translateX(0) translateY(0);
+            }
+
+            .basket-list {
+                grid-template-columns: repeat(2, 1fr);
+                gap: clamp(6px, 1.5vw, 10px);
+            }
+
+            .basket-item {
+                padding: clamp(8px, 1.5vw, 10px);
+            }
+
+            .basket-item-name {
+                font-size: clamp(9px, 1.2vw, 10px);
+                margin-bottom: 4px;
+            }
+
+            .basket-item-fill {
+                font-size: clamp(8px, 1vw, 9px);
+            }
+
+            .edit-modal,
+            .results-modal {
+                width: calc(100% - 20px);
+                padding: clamp(18px, 3vw, 24px);
+                max-height: 85vh;
+            }
+
+            .edit-modal h2,
+            .results-modal h2 {
+                font-size: clamp(16px, 4vw, 22px);
+                margin-bottom: clamp(16px, 3vw, 24px);
+            }
+
+            .group-result {
+                padding: clamp(10px, 1.5vw, 14px);
+                margin-bottom: clamp(10px, 1.5vw, 14px);
+            }
+
+            .group-result-title {
+                font-size: clamp(11px, 1.5vw, 12px);
+                margin-bottom: clamp(6px, 1vw, 8px);
+            }
+
+            .group-result-members {
+                font-size: clamp(10px, 1.5vw, 11px);
+                line-height: 1.6;
+            }
+
+            .input-group input {
+                font-size: clamp(12px, 1.8vw, 13px);
+            }
+
+            .edit-manage-btn {
+                padding: clamp(6px, 1.5vw, 8px) clamp(10px, 1.5vw, 12px);
+                font-size: clamp(9px, 1.2vw, 10px);
+            }
+
+            .students-header {
+                gap: 6px;
+                margin-bottom: clamp(10px, 1.5vw, 12px);
+                padding-bottom: clamp(8px, 1.5vw, 10px);
+            }
+
+            .student-count {
+                font-size: clamp(11px, 1.5vw, 12px);
+            }
+
+            .progress-section {
+                padding: clamp(10px, 1.5vw, 12px);
+            }
+
+            .progress-text {
+                font-size: clamp(10px, 1.3vw, 11px);
+            }
+
+            .panel-title {
+                font-size: clamp(8px, 1.2vw, 9px);
+            }
+
+            .header {
+                top: clamp(10px, 2vw, 20px);
+            }
+
+            .tab-button-left {
+                left: clamp(8px, 2vw, 12px);
+            }
+
+            .tab-button-right {
+                right: clamp(8px, 2vw, 12px);
+            }
+        }
+
+        @media (max-height: 600px) {
+            .left-panel,
+            .right-panel {
+                max-height: calc(100vh - 140px);
+            }
+
+            .student-list {
+                max-height: 200px;
+            }
+
+            .basket-status-container {
+                max-height: 150px;
             }
 
             .basket-list {
                 grid-template-columns: repeat(2, 1fr);
             }
+        }
 
-            .edit-modal,
-            .results-modal {
-                width: 95%;
-                padding: 32px;
+        @media (orientation: landscape) and (max-height: 500px) {
+            .left-panel,
+            .right-panel {
+                max-height: calc(100vh - 100px);
+                top: clamp(50px, 8vh, 70px);
+            }
+
+            .tab-button {
+                width: clamp(40px, 8vw, 48px);
+                height: clamp(40px, 8vw, 48px);
+                font-size: clamp(16px, 3vw, 20px);
+            }
+
+            .class-title {
+                font-size: clamp(18px, 5vw, 28px);
+            }
+
+            .basket-status-container {
+                padding: clamp(10px, 1.5vw, 14px) clamp(12px, 2vw, 16px);
+                bottom: clamp(8px, 1.5vw, 12px);
+            }
+
+            .basket-list {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                gap: clamp(6px, 1vw, 8px);
             }
         }
 
@@ -1357,18 +1609,14 @@
 
             // ========== DRAWING LOGIC ==========
             calculateBalancedDistribution(totalStudents, numGroups) {
-                // Calculer la distribution équilibrée
                 const baseSize = Math.floor(totalStudents / numGroups);
                 const remainder = totalStudents % numGroups;
                 
-                // Créer un tableau avec les capacités équilibrées
                 const capacities = [];
                 for (let i = 0; i < numGroups; i++) {
-                    // Les premiers groupes (remainder) auront +1 personne
                     capacities.push(i < remainder ? baseSize + 1 : baseSize);
                 }
                 
-                // Mélanger les capacités pour plus de réalisme
                 for (let i = capacities.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [capacities[i], capacities[j]] = [capacities[j], capacities[i]];
@@ -1386,7 +1634,6 @@
 
                 let availableStudents = [...Array(this.state.students.length)].map((_, i) => i);
                 
-                // Calculer les capacités équilibrées
                 const capacities = this.calculateBalancedDistribution(this.state.students.length, numGroups);
                 
                 this.state.baskets.forEach((b, i) => {
@@ -1394,26 +1641,21 @@
                     b.capacity = capacities[i];
                 });
 
-                // ========== PHASE 1: SHUFFLE ANIMATION ==========
                 await this.shufflePhase();
 
                 let drawn = 0;
 
-                // ========== PHASE 2: TIRAGE RÉEL - UNE CARTE À LA FOIS ==========
                 while (availableStudents.length > 0) {
                     const randomIdx = Math.floor(Math.random() * availableStudents.length);
                     const studentIdx = availableStudents[randomIdx];
                     const cardObj = this.state.nameCards[studentIdx];
 
-                    // Filtrer les paniers avec de la place
                     const availableBaskets = this.state.baskets.filter(b => b.students.length < b.capacity);
                     if (availableBaskets.length === 0) break;
 
-                    // Choisir un panier aléatoire parmi les disponibles
                     const basketIdx = Math.floor(Math.random() * availableBaskets.length);
                     const targetBasket = availableBaskets[basketIdx];
 
-                    // Dessiner la carte (tombe dans le panier)
                     await this.drawCardSequence(cardObj, targetBasket, drawn);
 
                     targetBasket.students.push(this.state.students[studentIdx]);
@@ -1434,10 +1676,8 @@
             },
 
             async shufflePhase() {
-                const shuffleDuration = 3.5; // 3.5 secondes
+                const shuffleDuration = 3.5;
                 const startTime = Date.now();
-                const cardsToDraw = [...this.state.nameCards]; // Copie pour garder trace
-                const drawnCards = [];
                 
                 return new Promise(resolve => {
                     const shuffleInterval = setInterval(() => {
@@ -1446,7 +1686,6 @@
                         if (elapsed >= shuffleDuration * 1000) {
                             clearInterval(shuffleInterval);
                             
-                            // Remettre toutes les cartes à leur position initiale
                             this.state.nameCards.forEach((c, index) => {
                                 const angle = (index / Math.max(this.state.students.length - 1, 1)) * Math.PI - Math.PI / 2;
                                 const radius = 12;
@@ -1459,9 +1698,8 @@
                             return;
                         }
 
-                        // Mélange continue avec vitesse accélérée
                         const progress = elapsed / (shuffleDuration * 1000);
-                        const speedMultiplier = 1 + progress * 1.5; // Accélération progressive
+                        const speedMultiplier = 1 + progress * 1.5;
                         
                         this.state.nameCards.forEach((c, index) => {
                             const randomRotation = (Math.random() - 0.5) * 0.8;
@@ -1474,7 +1712,6 @@
                             c.card.position.z += randomPosZ;
                         });
 
-                        // Rotation autour du centre avec accélération
                         this.state.nameCards.forEach((c, index) => {
                             const angle = (elapsed / 1000) * (Math.PI * 2) * 2 * speedMultiplier;
                             const baseAngle = (index / Math.max(this.state.students.length - 1, 1)) * Math.PI - Math.PI / 2;
@@ -1483,10 +1720,9 @@
                             c.card.position.x = Math.cos(baseAngle + angle) * radius;
                             c.card.position.z = Math.sin(baseAngle + angle) * radius;
                             
-                            // Spin vertical rapide avec accélération
                             c.card.rotation.y += 0.18 * speedMultiplier;
                         });
-                    }, 16); // ~60fps
+                    }, 16);
                 });
             },
 
@@ -1497,7 +1733,6 @@
                 return new Promise(resolve => {
                     const tl = gsap.timeline({ onComplete: resolve });
 
-                    // Sélection rapide
                     tl.to(cardObj.card.material, {
                         emissiveIntensity: 1,
                         duration: 0.3,
@@ -1512,10 +1747,8 @@
                         ease: "back.out"
                     }, 0);
 
-                    // Corde disparaît
                     tl.to(cardObj.rope.scale, { y: 0, duration: 0.2 }, 0.1);
 
-                    // Chute dans le panier
                     tl.to(cardObj.card.position, {
                         x: endPos.x,
                         y: endPos.y,
@@ -1532,7 +1765,6 @@
                         ease: "sine.inOut"
                     }, 0.3);
 
-                    // Bounce dans le panier
                     tl.to(cardObj.card.position, {
                         y: basketPos.y + 0.7,
                         duration: 0.4,
