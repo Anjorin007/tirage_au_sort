@@ -3,1908 +3,2157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MIAD2 - Tirage au Sort 3D</title>
+    <title>Tirage au Sort 3D</title>
+    <meta name="description" content="Formez des groupes aléatoires pour n'importe quelle classe, avec une animation 3D.">
+    <meta name="theme-color" content="#0d1020">
+    <meta property="og:title" content="Tirage au Sort 3D">
+    <meta property="og:description" content="Formez des groupes aléatoires pour n'importe quelle classe, avec une animation 3D.">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎲%3C/text%3E%3C/svg%3E">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg: #0d1020;
+            --panel: rgba(18, 20, 38, 0.92);
+            --panel-border: rgba(255, 209, 102, 0.22);
+            --gold: #ffd166;
+            --gold-2: #ff9f1c;
+            --text: #f2f2f7;
+            --muted: #a3a8c3;
+            --field: rgba(255, 255, 255, 0.06);
+            --field-border: rgba(255, 255, 255, 0.14);
+            --danger: #ff6b6b;
+            --ok: #5ad19a;
+            color-scheme: dark;
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 50%, #16213e 100%);
-            width: 100vw;
-            height: 100vh;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
             overflow: hidden;
-            color: #fff;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', system-ui, sans-serif;
         }
 
-        #canvas-container {
-            width: 100%;
-            height: 100%;
-            position: relative;
+        #stage { position: fixed; inset: 0; }
+        #stage canvas { display: block; width: 100%; height: 100%; }
+
+        .vignette {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+            z-index: 1;
         }
 
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
+        button { font-family: inherit; cursor: pointer; }
+        button:disabled { opacity: 0.45; cursor: not-allowed; }
 
-        /* ========== HEADER CENTRAL ========== */
+        /* ========== HEADER ========== */
         .header {
             position: fixed;
-            top: clamp(12px, 4vw, 28px);
+            top: clamp(12px, 3vw, 24px);
             left: 50%;
             transform: translateX(-50%);
-            z-index: 30;
+            z-index: 20;
+            text-align: center;
             pointer-events: none;
+            width: min(70vw, 720px);
         }
 
         .class-title {
-            font-size: clamp(24px, 8vw, 42px);
-            font-weight: 800;
-            background: linear-gradient(135deg, #FFE066, #FFA500);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: clamp(1px, 1vw, 2.5px);
             font-family: 'Poppins', sans-serif;
-            text-shadow: 0 0 30px rgba(255, 224, 102, 0.15);
+            font-size: clamp(22px, 5.5vw, 40px);
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffe08a, var(--gold-2));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .subtitle {
+            margin-top: 2px;
+            font-size: clamp(12px, 2.6vw, 14px);
+            color: var(--muted);
+            text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
         }
 
         /* ========== TAB BUTTONS ========== */
         .tab-button {
             position: fixed;
-            width: clamp(48px, 12vw, 64px);
-            height: clamp(48px, 12vw, 64px);
-            border-radius: 12px;
+            top: clamp(12px, 3vw, 24px);
+            width: clamp(46px, 11vw, 58px);
+            height: clamp(46px, 11vw, 58px);
+            border-radius: 14px;
             border: none;
-            background: linear-gradient(135deg, rgba(255, 224, 102, 0.95), rgba(255, 165, 0, 0.95));
+            background: linear-gradient(135deg, rgba(255, 209, 102, 0.95), rgba(255, 159, 28, 0.95));
             color: #1a1a2e;
-            font-weight: 800;
-            font-size: clamp(20px, 5vw, 28px);
-            cursor: pointer;
+            font-size: clamp(20px, 5vw, 26px);
             z-index: 35;
-            pointer-events: auto;
-            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 12px 40px rgba(255, 224, 102, 0.3);
-            font-family: 'Poppins', sans-serif;
-            top: clamp(12px, 4vw, 28px);
+            box-shadow: 0 10px 34px rgba(255, 190, 80, 0.3);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-
-        .tab-button:hover {
-            transform: scale(1.12) translateY(-4px);
-            box-shadow: 0 18px 52px rgba(255, 224, 102, 0.5);
-        }
-
-        .tab-button:active {
-            transform: scale(0.98);
-        }
-
-        .tab-button-left {
-            left: clamp(12px, 3vw, 28px);
-        }
-
-        .tab-button-right {
-            right: clamp(12px, 3vw, 28px);
-        }
+        .tab-button:hover { transform: scale(1.08) translateY(-2px); }
+        .tab-button:active { transform: scale(0.96); }
+        .tab-button-left { left: clamp(12px, 3vw, 24px); }
+        .tab-button-right { right: clamp(12px, 3vw, 24px); }
 
         /* ========== PANELS ========== */
         .panel {
             position: fixed;
-            background: rgba(26, 26, 46, 0.93);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 224, 102, 0.2);
-            border-radius: 20px;
-            padding: clamp(18px, 4vw, 32px);
-            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 224, 102, 0.1);
-            z-index: 25;
-            pointer-events: auto;
-        }
-
-        /* ========== LEFT PANEL STUDENTS ========== */
-        .left-panel {
-            left: clamp(12px, 3vw, 28px);
-            top: clamp(80px, 15vh, 120px);
-            width: min(90vw, 380px);
-            max-height: calc(100vh - 200px);
-            display: flex;
-            flex-direction: column;
-            transform: translateX(-500px);
+            top: clamp(70px, 12vh, 96px);
+            width: min(92vw, 380px);
+            max-height: calc(100vh - clamp(70px, 12vh, 96px) - 90px);
+            overflow-y: auto;
+            background: var(--panel);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid var(--panel-border);
+            border-radius: 18px;
+            padding: clamp(16px, 3.5vw, 24px);
+            box-shadow: 0 20px 70px rgba(0, 0, 0, 0.55);
+            z-index: 30;
             opacity: 0;
             pointer-events: none;
-            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: transform 0.45s cubic-bezier(0.34, 1.3, 0.64, 1), opacity 0.3s;
         }
-
-        .left-panel.active {
-            transform: translateX(0);
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        /* ========== RIGHT PANEL CONFIG ========== */
-        .right-panel {
-            right: clamp(12px, 3vw, 28px);
-            top: clamp(80px, 15vh, 120px);
-            width: min(90vw, 380px);
-            display: flex;
-            flex-direction: column;
-            gap: clamp(14px, 3vw, 24px);
-            transform: translateX(500px);
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .right-panel.active {
-            transform: translateX(0);
-            opacity: 1;
-            pointer-events: auto;
-        }
+        .panel.active { opacity: 1; pointer-events: auto; transform: translateX(0) !important; }
+        .left-panel { left: clamp(12px, 3vw, 24px); transform: translateX(-110%); }
+        .right-panel { right: clamp(12px, 3vw, 24px); transform: translateX(110%); }
 
         .panel-title {
-            font-size: clamp(9px, 2vw, 11px);
-            text-transform: uppercase;
-            letter-spacing: clamp(1.5px, 2vw, 2.5px);
-            color: #FFE066;
-            font-weight: 800;
             font-family: 'Poppins', sans-serif;
-        }
-
-        /* ========== STUDENTS SECTION ========== */
-        .students-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: clamp(12px, 2vw, 18px);
-            padding-bottom: clamp(10px, 2vw, 14px);
-            border-bottom: 1px solid rgba(255, 224, 102, 0.15);
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .student-count {
-            font-size: clamp(12px, 2vw, 14px);
-            color: #FFE066;
+            font-size: 19px;
             font-weight: 700;
-            font-family: 'Poppins', sans-serif;
+            color: var(--gold);
+            margin-bottom: 14px;
         }
 
-        .edit-manage-btn {
-            padding: clamp(8px, 2vw, 10px) clamp(12px, 2vw, 18px);
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            border: none;
-            border-radius: 10px;
-            color: #fff;
-            font-weight: 700;
-            font-size: clamp(10px, 1.5vw, 12px);
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Poppins', sans-serif;
-            letter-spacing: 0.5px;
-        }
-
-        .edit-manage-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.4);
-        }
-
-        .student-list {
-            flex: 1;
-            overflow-y: auto;
-            padding-right: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: clamp(6px, 1vw, 10px);
-        }
-
-        .student-list::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .student-list::-webkit-scrollbar-track {
-            background: rgba(255, 224, 102, 0.06);
-            border-radius: 4px;
-        }
-
-        .student-list::-webkit-scrollbar-thumb {
-            background: rgba(255, 224, 102, 0.35);
-            border-radius: 4px;
-            transition: all 0.3s;
-        }
-
-        .student-list::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 224, 102, 0.6);
-        }
-
-        .student-item {
-            padding: clamp(10px, 2vw, 14px) clamp(12px, 2vw, 16px);
-            background: linear-gradient(135deg, rgba(255, 224, 102, 0.03), rgba(255, 224, 102, 0.01));
-            border: 1px solid rgba(255, 224, 102, 0.12);
-            border-radius: 10px;
-            font-size: clamp(11px, 2vw, 13px);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.3s;
-            cursor: default;
-        }
-
-        .student-item:hover {
-            background: linear-gradient(135deg, rgba(255, 224, 102, 0.08), rgba(255, 224, 102, 0.04));
-            border-color: rgba(255, 224, 102, 0.25);
-            transform: translateX(4px);
-        }
-
-        .student-number {
-            font-weight: 800;
-            color: #FFE066;
-            width: 28px;
-            height: 28px;
-            min-width: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 224, 102, 0.15);
-            border-radius: 8px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 12px;
-        }
-
-        .student-name {
-            flex: 1;
-            font-weight: 500;
-            color: #e8e8f0;
-            letter-spacing: 0.3px;
-            word-break: break-word;
-        }
-
-        /* ========== CONFIG SECTION ========== */
-        .config-group {
-            display: flex;
-            flex-direction: column;
-            gap: clamp(8px, 2vw, 10px);
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: clamp(6px, 1vw, 8px);
-        }
-
-        .input-group label {
-            font-size: clamp(9px, 1.5vw, 11px);
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #aaa;
-            font-weight: 700;
-        }
-
-        .input-group input {
-            padding: clamp(10px, 2vw, 12px) clamp(12px, 2vw, 16px);
-            background: rgba(255, 224, 102, 0.06);
-            border: 1px solid rgba(255, 224, 102, 0.2);
-            border-radius: 8px;
-            color: #fff;
-            font-size: clamp(12px, 2vw, 14px);
-            font-family: 'Poppins', sans-serif;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: #FFE066;
-            background: rgba(255, 224, 102, 0.1);
-            box-shadow: 0 0 16px rgba(255, 224, 102, 0.25);
-        }
-
-        .button-group {
-            display: flex;
-            gap: 8px;
-            width: 100%;
-            flex-wrap: wrap;
-        }
-
-        button {
-            flex: 1;
-            min-width: 100px;
-            padding: clamp(12px, 2.5vw, 14px) clamp(12px, 2vw, 16px);
-            background: linear-gradient(135deg, #FFE066, #FFA500);
-            border: none;
-            border-radius: 10px;
-            color: #1a1a2e;
-            font-weight: 800;
-            font-size: clamp(11px, 2vw, 13px);
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            font-family: 'Poppins', sans-serif;
-            letter-spacing: 0.8px;
-            box-shadow: 0 8px 20px rgba(255, 224, 102, 0.2);
-        }
-
-        button:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 14px 32px rgba(255, 224, 102, 0.4);
-        }
-
-        button:active:not(:disabled) {
-            transform: translateY(-1px);
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .progress-section {
-            padding: clamp(12px, 2vw, 16px);
-            background: rgba(255, 224, 102, 0.04);
-            border: 1px solid rgba(255, 224, 102, 0.12);
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .progress-text {
-            font-size: clamp(11px, 1.5vw, 12px);
-            color: #aaa;
-            display: flex;
-            justify-content: space-between;
-            font-weight: 600;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 7px;
-            background: rgba(255, 224, 102, 0.1);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #FFE066, #FFA500);
-            width: 0%;
-            transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-            border-radius: 4px;
-            box-shadow: 0 0 12px rgba(255, 224, 102, 0.4);
-        }
-
-        /* ========== BOTTOM BASKET STATUS ========== */
-        .basket-status-container {
-            position: fixed;
-            bottom: clamp(12px, 3vw, 28px);
-            left: 50%;
-            transform: translateX(-50%) translateY(200px);
-            z-index: 24;
-            pointer-events: auto;
-            width: calc(100% - clamp(24px, 6vw, 56px));
-            max-width: 1400px;
-            background: rgba(26, 26, 46, 0.93);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 224, 102, 0.2);
-            border-radius: 18px;
-            padding: clamp(16px, 3vw, 24px) clamp(18px, 4vw, 32px);
-            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 224, 102, 0.1);
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .basket-status-container.active {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .basket-title {
-            font-size: clamp(9px, 2vw, 11px);
-            text-transform: uppercase;
-            letter-spacing: clamp(1.5px, 2vw, 2.5px);
-            margin-bottom: clamp(12px, 2vw, 18px);
-            color: #FFE066;
-            font-weight: 800;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        .basket-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: clamp(10px, 2vw, 16px);
-        }
-
-        .basket-item {
-            padding: clamp(12px, 2vw, 16px);
-            background: linear-gradient(135deg, rgba(255, 224, 102, 0.03), rgba(255, 224, 102, 0.01));
-            border: 1px solid rgba(255, 224, 102, 0.12);
-            border-radius: 10px;
-            font-size: clamp(11px, 1.5vw, 12px);
-            transition: all 0.3s;
-            text-align: center;
-        }
-
-        .basket-item:hover {
-            background: linear-gradient(135deg, rgba(255, 224, 102, 0.08), rgba(255, 224, 102, 0.04));
-            border-color: rgba(255, 224, 102, 0.25);
-            transform: translateY(-4px);
-        }
-
-        .basket-item-name {
-            font-weight: 800;
-            color: #FFE066;
-            margin-bottom: 6px;
-            font-family: 'Poppins', sans-serif;
-            font-size: clamp(10px, 1.5vw, 12px);
-        }
-
-        .basket-item-fill {
-            font-size: clamp(9px, 1.3vw, 11px);
-            color: #aaa;
-            font-weight: 600;
-        }
-
-        /* ========== MODAL EDIT ========== */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
-            z-index: 200;
-            pointer-events: auto;
-        }
-
-        .modal-overlay.active {
+        .field { margin-bottom: 16px; }
+        .field > label, .field-label {
             display: block;
-            animation: fadeIn 0.4s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .edit-modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
-            background: rgba(26, 26, 46, 0.98);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 224, 102, 0.2);
-            border-radius: 20px;
-            padding: clamp(28px, 5vw, 44px);
-            width: min(95vw, 520px);
-            z-index: 201;
-            max-height: 88vh;
-            overflow-y: auto;
-            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .edit-modal.active {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translate(-50%, -50%) scale(1);
-        }
-
-        .edit-modal::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .edit-modal::-webkit-scrollbar-track {
-            background: rgba(255, 224, 102, 0.06);
-            border-radius: 4px;
-        }
-
-        .edit-modal::-webkit-scrollbar-thumb {
-            background: rgba(255, 224, 102, 0.35);
-            border-radius: 4px;
-        }
-
-        .edit-modal::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 224, 102, 0.6);
-        }
-
-        .edit-modal h2 {
-            font-size: clamp(20px, 5vw, 26px);
-            margin-bottom: clamp(20px, 4vw, 32px);
-            background: linear-gradient(135deg, #FFE066, #FFA500);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-family: 'Poppins', sans-serif;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-        }
-
-        .edit-form-group {
-            margin-bottom: clamp(16px, 3vw, 22px);
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .edit-form-group label {
-            font-size: clamp(9px, 1.5vw, 11px);
+            font-size: 12px;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #aaa;
-            font-weight: 700;
+            letter-spacing: 0.6px;
+            color: var(--muted);
+            margin-bottom: 6px;
         }
+        .hint { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.45; }
 
-        .edit-form-container {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .edit-form-group input {
-            flex: 1;
-            min-width: 120px;
-            padding: clamp(10px, 2vw, 12px) clamp(12px, 2vw, 16px);
-            background: rgba(255, 224, 102, 0.06);
-            border: 1px solid rgba(255, 224, 102, 0.2);
-            border-radius: 8px;
-            color: #fff;
-            font-size: clamp(12px, 2vw, 14px);
-            font-family: 'Inter', sans-serif;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-
-        .edit-form-group input:focus {
-            outline: none;
-            border-color: #FFE066;
-            background: rgba(255, 224, 102, 0.1);
-            box-shadow: 0 0 16px rgba(255, 224, 102, 0.25);
-        }
-
-        .delete-btn {
-            padding: clamp(10px, 2vw, 12px) clamp(10px, 2vw, 12px) !important;
-            background: #FF6B6B !important;
-            width: auto !important;
-            flex: none;
-            font-size: 16px;
-            margin: 0 !important;
-            min-width: 44px;
-        }
-
-        .delete-btn:hover {
-            background: #FF5252 !important;
-            transform: translateY(-2px) !important;
-        }
-
-        .edit-button-group {
-            display: flex;
-            gap: 8px;
-            margin-top: clamp(20px, 4vw, 32px);
-            padding-top: clamp(16px, 3vw, 24px);
-            border-top: 1px solid rgba(255, 224, 102, 0.1);
-            flex-wrap: wrap;
-        }
-
-        .edit-button-group button {
-            flex: 1;
-            min-width: 100px;
-            padding: clamp(11px, 2vw, 13px) clamp(12px, 2vw, 20px);
-        }
-
-        .edit-cancel-btn {
-            background: rgba(255, 224, 102, 0.1) !important;
-            color: #FFE066;
-            border: 1px solid rgba(255, 224, 102, 0.25);
-            box-shadow: none !important;
-        }
-
-        .edit-cancel-btn:hover {
-            background: rgba(255, 224, 102, 0.15) !important;
-            box-shadow: 0 8px 20px rgba(255, 224, 102, 0.15) !important;
-        }
-
-        .add-new-btn {
+        input[type="text"], input[type="number"], textarea, select {
             width: 100%;
-            padding: clamp(11px, 2vw, 13px);
-            background: linear-gradient(135deg, #4CAF50, #45a049) !important;
-            color: #fff !important;
-            margin-top: clamp(14px, 2vw, 20px);
-            margin-bottom: clamp(14px, 2vw, 20px);
-            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.25) !important;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--field-border);
+            background: var(--field);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--gold);
+            background: rgba(255, 209, 102, 0.07);
+        }
+        select option { background: #1b1d33; }
+        textarea { resize: vertical; line-height: 1.5; }
+        #namesInput { min-height: 220px; }
+        #groupNamesInput { min-height: 80px; }
+
+        .row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .btn {
+            padding: 9px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--field-border);
+            background: var(--field);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 600;
+            transition: background 0.2s, border-color 0.2s, transform 0.15s;
+        }
+        .btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.25); }
+        .btn:active:not(:disabled) { transform: scale(0.97); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gold), var(--gold-2));
+            color: #1a1a2e;
+            border: none;
+            box-shadow: 0 8px 24px rgba(255, 170, 50, 0.3);
+        }
+        .btn-primary:hover:not(:disabled) { background: linear-gradient(135deg, #ffe08a, #ffb347); }
+        .btn-big { flex: 1; padding: 13px; font-size: 15px; font-family: 'Poppins', sans-serif; }
+
+        .names-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0 12px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+        .names-meta strong { color: var(--gold); font-size: 16px; }
+        .warn { color: var(--gold-2); font-size: 12px; margin-top: 6px; }
+
+        .segmented {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            padding: 4px;
+            border-radius: 12px;
+            background: var(--field);
+            border: 1px solid var(--field-border);
+        }
+        .segmented button {
+            border: none;
+            border-radius: 9px;
+            padding: 9px 6px;
+            background: transparent;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .segmented button.active { background: var(--gold); color: #1a1a2e; }
+
+        .stepper { display: grid; grid-template-columns: 44px 1fr 44px; gap: 6px; }
+        .stepper input { text-align: center; font-size: 18px; font-weight: 700; -moz-appearance: textfield; }
+        .stepper input::-webkit-outer-spin-button,
+        .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .stepper .btn { font-size: 20px; padding: 0; }
+
+        .plan-preview {
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(90, 209, 154, 0.1);
+            border: 1px solid rgba(90, 209, 154, 0.3);
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+        .plan-preview.error { background: rgba(255, 107, 107, 0.1); border-color: rgba(255, 107, 107, 0.35); color: #ffb3b3; }
+
+        details { margin-bottom: 16px; }
+        summary {
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--muted);
+            margin-bottom: 10px;
         }
 
-        .add-new-btn:hover {
-            transform: translateY(-3px) !important;
-            box-shadow: 0 12px 28px rgba(76, 175, 80, 0.4) !important;
-        }
+        .progress-section { margin-top: 16px; }
+        .progress-text { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+        .progress-bar { height: 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+        .progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--gold), var(--gold-2)); transition: width 0.4s; }
 
-        /* ========== MODAL RESULTS ========== */
-        .results-modal {
+        /* ========== ONBOARDING ========== */
+        .onboarding {
             position: fixed;
-            top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
-            background: rgba(26, 26, 46, 0.98);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 224, 102, 0.2);
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 15;
+            width: min(90vw, 440px);
+            padding: 26px;
+            text-align: center;
             border-radius: 20px;
-            padding: clamp(28px, 5vw, 44px);
-            width: min(95vw, 700px);
-            z-index: 201;
-            max-height: 88vh;
-            overflow-y: auto;
-            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            box-shadow: 0 20px 70px rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(14px);
+        }
+        .onboarding h2 { font-family: 'Poppins', sans-serif; font-size: 22px; margin-bottom: 8px; }
+        .onboarding p { color: var(--muted); font-size: 14px; line-height: 1.55; margin-bottom: 18px; }
+        .onboarding .row { justify-content: center; }
+        .hidden { display: none !important; }
+
+        /* ========== BOTTOM STATUS ========== */
+        .group-bar {
+            position: fixed;
+            left: 50%;
+            bottom: clamp(10px, 2.5vw, 20px);
+            transform: translateX(-50%);
+            z-index: 20;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 94vw;
+        }
+        .group-chip {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: rgba(18, 20, 38, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            font-size: 13px;
+            backdrop-filter: blur(8px);
+            transition: transform 0.25s, border-color 0.25s;
+        }
+        .group-chip.bump { transform: scale(1.12); border-color: var(--gold); }
+        .group-chip .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+        .group-chip .count { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+        /* ========== DRAW HUD ========== */
+        .draw-hud {
+            position: fixed;
+            top: clamp(76px, 13vh, 104px);
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 25;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 8px 8px 16px;
+            border-radius: 999px;
+            background: rgba(18, 20, 38, 0.85);
+            border: 1px solid var(--panel-border);
+            font-size: 14px;
+            backdrop-filter: blur(8px);
+        }
+
+        .announce {
+            position: fixed;
+            left: 50%;
+            bottom: clamp(70px, 14vh, 120px);
+            transform: translateX(-50%);
+            z-index: 22;
+            pointer-events: none;
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+            opacity: 0;
+            width: 92vw;
+        }
+        .announce .who { font-size: clamp(26px, 6vw, 46px); font-weight: 800; text-shadow: 0 4px 24px rgba(0, 0, 0, 0.8); }
+        .announce .where { font-size: clamp(15px, 3.4vw, 22px); font-weight: 700; margin-top: 2px; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8); }
+
+        /* ========== MODALS ========== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 6, 14, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 40;
             opacity: 0;
             pointer-events: none;
-            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: opacity 0.3s;
         }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
 
-        .results-modal.active {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translate(-50%, -50%) scale(1);
+        .modal {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -46%) scale(0.96);
+            width: min(94vw, 860px);
+            max-height: 88vh;
+            overflow-y: auto;
+            z-index: 45;
+            background: #15172b;
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            padding: clamp(18px, 4vw, 30px);
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.3, 0.64, 1);
         }
+        .modal.active { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+        .modal h2 { font-family: 'Poppins', sans-serif; color: var(--gold); margin-bottom: 4px; font-size: clamp(20px, 4vw, 26px); }
+        .modal .modal-sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
 
-        .results-modal::-webkit-scrollbar {
-            width: 8px;
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
         }
-
-        .results-modal::-webkit-scrollbar-track {
-            background: rgba(255, 224, 102, 0.06);
+        .result-card {
+            border-radius: 14px;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid var(--c);
         }
-
-        .results-modal::-webkit-scrollbar-thumb {
-            background: rgba(255, 224, 102, 0.35);
-            border-radius: 4px;
-        }
-
-        .results-modal h2 {
-            font-size: clamp(22px, 5vw, 28px);
-            margin-bottom: clamp(20px, 4vw, 32px);
-            background: linear-gradient(135deg, #FFE066, #FFA500);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .result-card h3 {
             font-family: 'Poppins', sans-serif;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-        }
-
-        .group-result {
-            margin-bottom: clamp(14px, 2vw, 20px);
-            padding: clamp(14px, 2vw, 20px);
-            background: linear-gradient(135deg, rgba(255, 224, 102, 0.06), rgba(255, 224, 102, 0.02));
-            border: 1px solid rgba(255, 224, 102, 0.15);
-            border-left: 4px solid #FFE066;
-            border-radius: 12px;
-            transition: all 0.3s;
-        }
-
-        .group-result:hover {
-            background: linear-gradient(135deg, rgba(255, 224, 102, 0.1), rgba(255, 224, 102, 0.05));
-            border-color: rgba(255, 224, 102, 0.3);
-            transform: translateX(4px);
-        }
-
-        .group-result-title {
-            font-weight: 800;
-            margin-bottom: clamp(8px, 1vw, 12px);
-            color: #FFE066;
-            font-family: 'Poppins', sans-serif;
-            font-size: clamp(12px, 2vw, 14px);
-            letter-spacing: 0.5px;
-        }
-
-        .group-result-members {
-            font-size: clamp(11px, 2vw, 13px);
-            line-height: 2;
-            color: #ddd;
-        }
-
-        .modal-buttons {
+            font-size: 16px;
+            margin-bottom: 8px;
             display: flex;
+            justify-content: space-between;
             gap: 8px;
-            margin-top: clamp(20px, 4vw, 32px);
-            padding-top: clamp(16px, 3vw, 24px);
-            border-top: 1px solid rgba(255, 224, 102, 0.1);
-            flex-wrap: wrap;
         }
+        .result-card h3 span { color: var(--muted); font-size: 13px; font-weight: 600; flex: none; }
+        .result-card ol { padding-left: 20px; font-size: 14px; line-height: 1.7; }
 
-        .modal-buttons button {
-            flex: 1;
-            min-width: 120px;
-            padding: clamp(11px, 2vw, 13px) clamp(12px, 2vw, 20px);
+        .modal-buttons { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translate(-50%, 20px);
+            z-index: 60;
+            padding: 10px 18px;
+            border-radius: 12px;
+            background: #23263f;
+            border: 1px solid var(--panel-border);
+            font-size: 14px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s, transform 0.25s;
         }
+        .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
         .no-webgl {
-            display: none;
             position: fixed;
-            top: 50%;
+            top: 12px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(26, 26, 46, 0.98);
-            border: 2px solid #FF6B6B;
-            border-radius: 20px;
-            padding: clamp(28px, 5vw, 44px);
-            text-align: center;
-            max-width: min(95vw, 500px);
-            z-index: 1000;
-        }
-
-        .no-webgl h2 {
-            color: #FF6B6B;
-            margin-bottom: clamp(14px, 2vw, 18px);
-            font-family: 'Poppins', sans-serif;
-            font-size: clamp(18px, 4vw, 24px);
-            font-weight: 800;
-        }
-
-        .no-webgl p {
-            color: #ddd;
-            line-height: 1.6;
-            font-size: clamp(12px, 2vw, 14px);
-        }
-
-        @media (max-width: 1024px) {
-            .basket-list {
-                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            }
+            transform: translateX(-50%);
+            z-index: 50;
+            padding: 10px 16px;
+            border-radius: 12px;
+            background: rgba(255, 107, 107, 0.15);
+            border: 1px solid rgba(255, 107, 107, 0.4);
+            font-size: 13px;
+            display: none;
         }
 
         @media (max-width: 640px) {
-            body {
-                overflow-y: auto;
-            }
-
-            .left-panel,
-            .right-panel {
-                position: fixed;
-                width: calc(100% - clamp(24px, 6vw, 56px));
-                max-width: 100%;
-                border-radius: 16px;
-                padding: clamp(16px, 3vw, 24px);
-                max-height: calc(100vh - 160px);
-            }
-
-            .left-panel {
-                left: clamp(12px, 3vw, 28px);
-                top: clamp(80px, 12vh, 100px);
-            }
-
-            .right-panel {
-                right: clamp(12px, 3vw, 28px);
-                top: clamp(80px, 12vh, 100px);
-            }
-
-            .basket-status-container {
-                width: calc(100% - clamp(24px, 6vw, 56px));
-                padding: clamp(14px, 3vw, 18px) clamp(14px, 3vw, 24px);
-                bottom: clamp(12px, 2vw, 18px);
-                border-radius: 16px;
-            }
-
-            .basket-list {
-                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-                gap: clamp(8px, 2vw, 12px);
-            }
-
-            .basket-item {
-                padding: clamp(10px, 1.5vw, 12px);
-            }
-
-            .edit-modal,
-            .results-modal {
-                width: calc(100% - clamp(20px, 4vw, 40px));
-                max-width: 95vw;
-                padding: clamp(20px, 4vw, 32px);
-                max-height: 90vh;
-                top: 50%;
-            }
-
-            .modal-buttons,
-            .edit-button-group {
-                flex-direction: column;
-            }
-
-            .modal-buttons button,
-            .edit-button-group button {
+            .header { width: 60vw; }
+            .group-bar {
+                left: 0;
+                transform: none;
                 width: 100%;
-                min-width: auto;
+                max-width: none;
+                padding: 0 12px;
+                flex-wrap: nowrap;
+                justify-content: flex-start;
+                overflow-x: auto;
+                scrollbar-width: none;
             }
-
-            .edit-form-container {
-                flex-direction: column;
-            }
-
-            .edit-form-group input {
-                width: 100%;
-            }
-
-            .delete-btn {
-                width: 100% !important;
-            }
-
-            .group-result-members {
-                line-height: 1.8;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .class-title {
-                font-size: clamp(18px, 6vw, 28px);
-                letter-spacing: 0.5px;
-            }
-
-            .tab-button {
-                width: clamp(44px, 10vw, 52px);
-                height: clamp(44px, 10vw, 52px);
-                font-size: clamp(18px, 4vw, 24px);
-                border-radius: 10px;
-            }
-
-            .left-panel,
-            .right-panel {
-                width: calc(100% - 24px);
-                padding: clamp(14px, 2vw, 18px);
-                top: clamp(70px, 10vh, 90px);
-            }
-
-            .student-item {
-                padding: clamp(8px, 1.5vw, 10px) clamp(10px, 1.5vw, 12px);
-                gap: 8px;
-            }
-
-            .student-number {
-                width: 24px;
-                height: 24px;
-                min-width: 24px;
-                font-size: 10px;
-            }
-
-            .button-group {
-                gap: 6px;
-            }
-
-            button {
-                min-width: 80px;
-                padding: clamp(10px, 2vw, 12px) clamp(10px, 1.5vw, 12px);
-                font-size: clamp(10px, 1.5vw, 11px);
-            }
-
-            .basket-status-container {
-                width: calc(100% - 16px);
-                padding: clamp(12px, 2vw, 16px) clamp(12px, 2vw, 16px);
-                bottom: clamp(8px, 1.5vw, 12px);
-                left: 8px;
-                transform: translateX(0) translateY(200px);
-            }
-
-            .basket-status-container.active {
-                transform: translateX(0) translateY(0);
-            }
-
-            .basket-list {
-                grid-template-columns: repeat(2, 1fr);
-                gap: clamp(6px, 1.5vw, 10px);
-            }
-
-            .basket-item {
-                padding: clamp(8px, 1.5vw, 10px);
-            }
-
-            .basket-item-name {
-                font-size: clamp(9px, 1.2vw, 10px);
-                margin-bottom: 4px;
-            }
-
-            .basket-item-fill {
-                font-size: clamp(8px, 1vw, 9px);
-            }
-
-            .edit-modal,
-            .results-modal {
-                width: calc(100% - 20px);
-                padding: clamp(18px, 3vw, 24px);
-                max-height: 85vh;
-            }
-
-            .edit-modal h2,
-            .results-modal h2 {
-                font-size: clamp(16px, 4vw, 22px);
-                margin-bottom: clamp(16px, 3vw, 24px);
-            }
-
-            .group-result {
-                padding: clamp(10px, 1.5vw, 14px);
-                margin-bottom: clamp(10px, 1.5vw, 14px);
-            }
-
-            .group-result-title {
-                font-size: clamp(11px, 1.5vw, 12px);
-                margin-bottom: clamp(6px, 1vw, 8px);
-            }
-
-            .group-result-members {
-                font-size: clamp(10px, 1.5vw, 11px);
-                line-height: 1.6;
-            }
-
-            .input-group input {
-                font-size: clamp(12px, 1.8vw, 13px);
-            }
-
-            .edit-manage-btn {
-                padding: clamp(6px, 1.5vw, 8px) clamp(10px, 1.5vw, 12px);
-                font-size: clamp(9px, 1.2vw, 10px);
-            }
-
-            .students-header {
-                gap: 6px;
-                margin-bottom: clamp(10px, 1.5vw, 12px);
-                padding-bottom: clamp(8px, 1.5vw, 10px);
-            }
-
-            .student-count {
-                font-size: clamp(11px, 1.5vw, 12px);
-            }
-
-            .progress-section {
-                padding: clamp(10px, 1.5vw, 12px);
-            }
-
-            .progress-text {
-                font-size: clamp(10px, 1.3vw, 11px);
-            }
-
-            .panel-title {
-                font-size: clamp(8px, 1.2vw, 9px);
-            }
-
-            .header {
-                top: clamp(10px, 2vw, 20px);
-            }
-
-            .tab-button-left {
-                left: clamp(8px, 2vw, 12px);
-            }
-
-            .tab-button-right {
-                right: clamp(8px, 2vw, 12px);
-            }
-        }
-
-        @media (max-height: 600px) {
-            .left-panel,
-            .right-panel {
-                max-height: calc(100vh - 140px);
-            }
-
-            .student-list {
-                max-height: 200px;
-            }
-
-            .basket-status-container {
-                max-height: 150px;
-            }
-
-            .basket-list {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (orientation: landscape) and (max-height: 500px) {
-            .left-panel,
-            .right-panel {
-                max-height: calc(100vh - 100px);
-                top: clamp(50px, 8vh, 70px);
-            }
-
-            .tab-button {
-                width: clamp(40px, 8vw, 48px);
-                height: clamp(40px, 8vw, 48px);
-                font-size: clamp(16px, 3vw, 20px);
-            }
-
-            .class-title {
-                font-size: clamp(18px, 5vw, 28px);
-            }
-
-            .basket-status-container {
-                padding: clamp(10px, 1.5vw, 14px) clamp(12px, 2vw, 16px);
-                bottom: clamp(8px, 1.5vw, 12px);
-            }
-
-            .basket-list {
-                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-                gap: clamp(6px, 1vw, 8px);
-            }
+            .group-bar::-webkit-scrollbar { display: none; }
+            .group-chip { padding: 5px 10px; font-size: 12px; flex: none; }
         }
 
         @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
+            *, *::before, *::after { transition-duration: 0.01ms !important; }
         }
     </style>
 </head>
 <body>
-    <div id="canvas-container"></div>
+    <div id="stage"></div>
+    <div class="vignette"></div>
 
-    <!-- HEADER CENTRAL -->
-    <div class="header">
-        <div class="class-title">🎲 MIAD2</div>
-    </div>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="class-title" id="classTitle">🎲 Ma classe</div>
+        <div class="subtitle" id="subtitle"></div>
+    </header>
 
-    <!-- TAB BUTTONS -->
-    <button class="tab-button tab-button-left" onclick="app.toggleLeftPanel()" title="Afficher/Masquer Étudiants">👥</button>
-    <button class="tab-button tab-button-right" onclick="app.toggleRightPanel()" title="Afficher/Masquer Configuration">⚙️</button>
+    <button class="tab-button tab-button-left" id="btnLeft" title="Participants">👥</button>
+    <button class="tab-button tab-button-right" id="btnRight" title="Réglages">⚙️</button>
 
-    <!-- LEFT PANEL - STUDENTS -->
-    <div class="left-panel panel" id="leftPanel">
-        <div class="panel-title">📚 Étudiants</div>
-        <div class="students-header">
-            <div class="student-count">
-                <span id="studentCount">0</span> / <span id="maxStudents">13</span>
+    <!-- LEFT PANEL : PARTICIPANTS -->
+    <aside class="panel left-panel" id="leftPanel">
+        <div class="panel-title">👥 Participants</div>
+        <div class="field">
+            <label for="namesInput">Un nom par ligne</label>
+            <textarea id="namesInput" spellcheck="false" placeholder="Collez ou tapez les noms ici, par exemple :&#10;Awa Diallo&#10;Lucas Martin&#10;Inès Kouassi&#10;…"></textarea>
+            <div class="names-meta">
+                <span><strong id="namesCount">0</strong> participant(s)</span>
+                <button class="btn" id="btnClear">🗑️ Vider</button>
             </div>
-            <button class="edit-manage-btn" onclick="app.openEditModal()">✏️ Gérer</button>
+            <div class="warn hidden" id="dupWarn"></div>
         </div>
-        <div class="student-list" id="studentList"></div>
-    </div>
+        <div class="row">
+            <button class="btn" id="btnImport">📂 Importer (.txt / .csv)</button>
+            <button class="btn" id="btnExample">✨ Exemple</button>
+        </div>
+        <input type="file" id="fileInput" accept=".txt,.csv,text/plain,text/csv" hidden>
+        <p class="hint">Vous pouvez coller une colonne Excel. Si vous collez tout sur une seule ligne, les noms peuvent être séparés par des virgules ou des points-virgules. Tout est enregistré dans ce navigateur.</p>
+    </aside>
 
-    <!-- RIGHT PANEL - CONFIG -->
-    <div class="right-panel panel" id="rightPanel">
-        <div class="panel-title">🎮 Tirage au Sort</div>
-        <div class="config-group">
-            <div class="input-group">
-                <label>Nombre de groupes</label>
-                <input type="number" id="groupCount" min="2" max="6" value="4">
+    <!-- RIGHT PANEL : SETTINGS -->
+    <aside class="panel right-panel" id="rightPanel">
+        <div class="panel-title">⚙️ Réglages</div>
+
+        <div class="field">
+            <label for="titleInput">Nom de la classe / du tirage</label>
+            <input type="text" id="titleInput" maxlength="60" placeholder="Ex. Terminale B, Projet Web…">
+        </div>
+
+        <div class="field">
+            <span class="field-label">Former les groupes par</span>
+            <div class="segmented" id="modeSwitch">
+                <button data-mode="count">Nombre de groupes</button>
+                <button data-mode="size">Personnes / groupe</button>
             </div>
-            <div class="button-group">
-                <button id="startBtn" onclick="app.startDrawing()">🚀 Lancer</button>
-                <button id="resetBtn" onclick="app.resetDrawing()">↺ Reset</button>
+        </div>
+
+        <div class="field">
+            <label for="groupValue" id="groupValueLabel">Nombre de groupes</label>
+            <div class="stepper">
+                <button class="btn" id="btnMinus" aria-label="Moins">−</button>
+                <input type="number" id="groupValue" min="1" max="200" value="4">
+                <button class="btn" id="btnPlus" aria-label="Plus">+</button>
             </div>
-            <div class="progress-section">
-                <div class="progress-text">
-                    <span>Progression</span>
-                    <span><span id="progressCount">0</span>/<span id="totalCount">0</span></span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
+        </div>
+
+        <div class="field hidden" id="remainderField">
+            <label for="remainderSelect">S'il reste des personnes</label>
+            <select id="remainderSelect">
+                <option value="balance">Équilibrer (groupes de taille proche)</option>
+                <option value="merge">Les ajouter aux groupes existants</option>
+                <option value="exact">Faire un groupe à part avec le reste</option>
+            </select>
+        </div>
+
+        <div class="plan-preview" id="planPreview"></div>
+
+        <details>
+            <summary>🏷️ Noms des groupes (facultatif)</summary>
+            <textarea id="groupNamesInput" placeholder="Un nom par ligne : Les Lions, Les Aigles…&#10;Sinon : Groupe 1, Groupe 2…"></textarea>
+        </details>
+
+        <div class="field">
+            <label for="speedSelect">Vitesse de l'animation</label>
+            <select id="speedSelect">
+                <option value="slow">Lente (suspense)</option>
+                <option value="normal">Normale</option>
+                <option value="fast">Rapide</option>
+                <option value="instant">Instantanée (sans animation)</option>
+            </select>
+        </div>
+
+        <div class="row">
+            <button class="btn btn-primary btn-big" id="btnStart">🚀 Lancer</button>
+            <button class="btn btn-big" id="btnReset" style="flex:0 0 auto">↺</button>
+        </div>
+
+        <div class="progress-section">
+            <div class="progress-text">
+                <span>Progression</span>
+                <span><span id="progressCount">0</span> / <span id="progressTotal">0</span></span>
             </div>
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        </div>
+        <p class="hint">Raccourcis : <b>Espace</b> pour lancer, <b>R</b> pour réinitialiser, <b>Échap</b> pour fermer une fenêtre.</p>
+    </aside>
+
+    <!-- ONBOARDING -->
+    <div class="onboarding hidden" id="onboarding">
+        <h2>👋 Bienvenue !</h2>
+        <p>Ajoutez les noms de votre classe, choisissez comment former les groupes, puis lancez le tirage.</p>
+        <div class="row">
+            <button class="btn btn-primary" id="btnOnbNames">👥 Ajouter les noms</button>
+            <button class="btn" id="btnOnbExample">✨ Essayer avec un exemple</button>
         </div>
     </div>
 
-    <!-- BOTTOM BASKET STATUS -->
-    <div class="basket-status-container" id="basketStatusContainer">
-        <div class="basket-title">📊 État des Groupes</div>
-        <div class="basket-list" id="basketList"></div>
+    <!-- DRAW HUD -->
+    <div class="draw-hud hidden" id="drawHud">
+        <span>🎲 Tirage en cours… <b id="hudCount">0/0</b></span>
+        <button class="btn" id="btnSkip">⏩ Passer</button>
     </div>
+    <div class="announce" id="announce"><div class="who" id="announceWho"></div><div class="where" id="announceWhere"></div></div>
 
-    <!-- MODAL OVERLAY -->
-    <div class="modal-overlay" id="modalOverlay" onclick="app.closeEditModal()"></div>
+    <div class="group-bar" id="groupBar"></div>
 
-    <!-- EDIT MODAL -->
-    <div class="edit-modal" id="editModal">
-        <h2>✏️ Gérer les Étudiants</h2>
-        <div id="editFormContainer"></div>
-        <button class="add-new-btn" onclick="app.addNewStudent()">➕ Ajouter un étudiant</button>
-        <div class="edit-button-group">
-            <button class="edit-save-btn" onclick="app.saveChanges()">💾 Enregistrer</button>
-            <button class="edit-cancel-btn" onclick="app.closeEditModal()">Annuler</button>
-        </div>
-    </div>
-
-    <!-- RESULTS MODAL -->
-    <div class="results-modal" id="resultsModal">
-        <h2>🎉 Résultats du Tirage</h2>
-        <div id="resultsContainer"></div>
+    <!-- RESULTS -->
+    <div class="modal-overlay" id="overlay"></div>
+    <div class="modal" id="resultsModal" role="dialog" aria-modal="true" aria-labelledby="resultsTitle">
+        <h2 id="resultsTitle">🎉 Résultats du tirage</h2>
+        <div class="modal-sub" id="resultsSub"></div>
+        <div class="results-grid" id="resultsGrid"></div>
         <div class="modal-buttons">
-            <button onclick="app.resetDrawing()">🔄 Nouveau tirage</button>
-            <button onclick="app.exportResults()">📥 Exporter CSV</button>
+            <button class="btn" id="btnCopy">📋 Copier</button>
+            <button class="btn" id="btnCsv">📥 Exporter CSV</button>
+            <button class="btn" id="btnClose">👀 Voir la scène</button>
+            <button class="btn btn-primary" id="btnAgain">🔄 Nouveau tirage</button>
         </div>
     </div>
 
-    <!-- WEBGL ERROR -->
-    <div class="no-webgl">
-        <h2>⚠️ WebGL Non Supporté</h2>
-        <p>Votre navigateur ne supporte pas WebGL. Veuillez utiliser Chrome, Firefox, Edge ou Safari récent.</p>
-    </div>
+    <div class="toast" id="toast"></div>
+    <div class="no-webgl" id="noWebgl">⚠️ La 3D n'est pas disponible sur cet appareil : le tirage fonctionne quand même, sans animation.</div>
 
     <script>
-        // ========== APPLICATION PRINCIPALE ==========
-        const app = {
-            // Configuration
-            config: {
-                defaultStudents: [
-                    "ADJALLALA Calixte", "AGO Immaculée", "AISSO Eudoxe", "DRAMANE Hamzath",
-                    "GANDONOU Promise", "GOZO Jaurès", "HOUSSOU Carmel", "KPAKATIA Aziz", 
-                    "NOUGBOLOGNI Valentin", "OGOUCHINA Nora", "OUSSA Méchad",
-                ]
-            },
+    (function () {
+        'use strict';
 
-            // État
-            state: {
-                students: [],
-                editingStudents: [],
-                scene: null,
-                camera: null,
-                renderer: null,
-                nameCards: [],
-                baskets: [],
-                isDrawing: false
-            },
+        // ================================================================
+        //  OUTILS
+        // ================================================================
+        const $ = (id) => document.getElementById(id);
 
-            // ========== INITIALISATION ==========
-            init() {
-                if (!this.checkWebGL()) {
-                    document.querySelector('.no-webgl').style.display = 'block';
+        const PALETTE = ['#e63946', '#2a9d8f', '#f4a261', '#457b9d', '#9b5de5', '#06d6a0',
+                         '#ef476f', '#ffb703', '#118ab2', '#8ac926', '#ff7f50', '#6d597a'];
+        const MAX_GROUPS = 24;
+        const MAX_NAMES = 200;
+        const SPEEDS = { slow: 1.5, normal: 1, fast: 0.45, instant: 0 };
+        const STORAGE_KEY = 'tirage3d:v1';
+        const EXAMPLE_NAMES = [
+            'Awa Diallo', 'Lucas Martin', 'Inès Kouassi', 'Yanis Benali', 'Chloé Dubois',
+            'Moussa Traoré', 'Léa Bernard', 'Kofi Mensah', 'Sarah Cohen', 'Hugo Petit',
+            'Fatou Ndiaye', 'Nathan Leroy', 'Amina Haddad', 'Théo Moreau'
+        ];
+
+        // Hasard équitable (crypto si disponible)
+        const rng = {
+            float() {
+                if (window.crypto && window.crypto.getRandomValues) {
+                    const a = new Uint32Array(1);
+                    window.crypto.getRandomValues(a);
+                    return a[0] / 4294967296;
+                }
+                return Math.random();
+            },
+            int(n) { return Math.floor(this.float() * n); },
+            shuffle(arr) {
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = this.int(i + 1);
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                return arr;
+            }
+        };
+
+        const storage = {
+            load() {
+                try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch (e) { return {}; }
+            },
+            save(data) {
+                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* stockage indisponible */ }
+            }
+        };
+
+        function parseNames(text) {
+            let lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+            if (lines.length === 1 && /[,;]/.test(lines[0])) {
+                lines = lines[0].split(/[,;]/);
+            }
+            return lines
+                .map(l => l.replace(/\t+/g, ' ').replace(/\s+/g, ' ').trim())
+                .filter(Boolean)
+                .slice(0, MAX_NAMES);
+        }
+
+        function parseImportedFile(text, isCsv) {
+            const rows = text.replace(/^﻿/, '').split(/\r?\n/).map(r => r.trim()).filter(Boolean);
+            if (!isCsv) return rows.join('\n');
+            const sep = (rows[0] || '').includes(';') ? ';' : ',';
+            const names = rows.map(r => r.split(sep)
+                .map(c => c.trim().replace(/^"(.*)"$/, '$1').trim())
+                .filter(Boolean).join(' '));
+            if (names.length && /^(nom|name|prénom|prenom|élève|eleve|étudiant|etudiant)/i.test(names[0])) names.shift();
+            return names.filter(Boolean).join('\n');
+        }
+
+        // Calcule le nombre de groupes et la taille de chacun
+        function computePlan(n, mode, value, remainder) {
+            if (n < 2) return { error: 'Ajoutez au moins 2 participants.' };
+            if (!Number.isFinite(value) || value < 1) return { error: 'Entrez un nombre valide.' };
+            let capacities;
+            if (mode === 'count') {
+                const g = value;
+                if (g < 2) return { error: 'Il faut au moins 2 groupes.' };
+                if (g > n) return { error: `Impossible : ${g} groupes pour ${n} participants.` };
+                capacities = balanced(n, g);
+            } else {
+                const k = value;
+                if (k >= n) return { error: `Groupes de ${k} : il faut plus de ${k} participants.` };
+                if (remainder === 'exact') {
+                    capacities = Array(Math.floor(n / k)).fill(k);
+                    if (n % k) capacities.push(n % k);
+                } else {
+                    const g = remainder === 'merge' ? Math.floor(n / k) : Math.ceil(n / k);
+                    capacities = balanced(n, Math.max(2, g));
+                }
+            }
+            if (capacities.length > MAX_GROUPS) return { error: `Maximum ${MAX_GROUPS} groupes.` };
+            return { capacities };
+        }
+
+        function balanced(n, g) {
+            const base = Math.floor(n / g), rem = n % g;
+            return Array.from({ length: g }, (_, i) => base + (i < rem ? 1 : 0));
+        }
+
+        function describePlan(caps) {
+            const counts = {};
+            caps.forEach(c => { counts[c] = (counts[c] || 0) + 1; });
+            const parts = Object.keys(counts).map(Number).sort((a, b) => b - a)
+                .map(size => `${counts[size]} × ${size} pers.`);
+            return `<b>${caps.length} groupes</b> : ${parts.join(' + ')}`;
+        }
+
+        function roundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+        }
+
+        // Écrit un texte centré, sur 1 ou 2 lignes, à la taille maximale possible
+        function drawFittedText(ctx, text, cx, cy, maxW, maxH, weight, family) {
+            const font = (s) => `${weight} ${s}px ${family}`;
+            for (let size = Math.floor(maxH * 0.62); size >= 12; size -= 2) {
+                ctx.font = font(size);
+                if (ctx.measureText(text).width <= maxW) {
+                    ctx.fillText(text, cx, cy);
                     return;
                 }
+            }
+            const words = text.split(' ');
+            if (words.length > 1) {
+                let best = null;
+                for (let i = 1; i < words.length; i++) {
+                    const l1 = words.slice(0, i).join(' '), l2 = words.slice(i).join(' ');
+                    ctx.font = font(100);
+                    const w = Math.max(ctx.measureText(l1).width, ctx.measureText(l2).width);
+                    if (!best || w < best.w) best = { l1, l2, w };
+                }
+                for (let size = Math.floor(maxH * 0.4); size >= 12; size -= 2) {
+                    ctx.font = font(size);
+                    if (Math.max(ctx.measureText(best.l1).width, ctx.measureText(best.l2).width) <= maxW) {
+                        ctx.fillText(best.l1, cx, cy - size * 0.58);
+                        ctx.fillText(best.l2, cx, cy + size * 0.58);
+                        return;
+                    }
+                }
+            }
+            ctx.font = font(12);
+            let t = text;
+            while (t.length > 1 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1);
+            ctx.fillText(t + '…', cx, cy);
+        }
 
-                this.state.students = [...this.config.defaultStudents];
-                this.initScene();
-                this.updateStudentList();
-                const numGroups = parseInt(document.getElementById('groupCount').value);
-                this.initializeScene(numGroups);
-                this.animate();
-
-                console.log('🎲 MIAD2 Randomizer Initialized');
-                console.log('👥 Students:', this.state.students);
+        // ================================================================
+        //  TEXTURES PROCÉDURALES
+        // ================================================================
+        const Tex = {
+            canvas(w, h) {
+                const c = document.createElement('canvas');
+                c.width = w; c.height = h;
+                return [c, c.getContext('2d')];
             },
 
-            checkWebGL() {
+            noise(ctx, w, h, count, alpha) {
+                for (let i = 0; i < count; i++) {
+                    ctx.fillStyle = Math.random() < 0.5 ? `rgba(0,0,0,${alpha})` : `rgba(255,255,255,${alpha})`;
+                    ctx.fillRect(Math.random() * w, Math.random() * h, 1 + Math.random() * 2, 1 + Math.random() * 2);
+                }
+            },
+
+            wood(size = 1024, planks = 7, hue = 26, light = 30) {
+                const [c, g] = this.canvas(size, size);
+                const pw = size / planks;
+                for (let p = 0; p < planks; p++) {
+                    let y = -Math.random() * size * 0.5;
+                    while (y < size) {
+                        const len = size * (0.4 + Math.random() * 0.5);
+                        const h = hue + Math.random() * 8 - 4;
+                        const s = 38 + Math.random() * 14;
+                        const l = light - 5 + Math.random() * 10;
+                        g.save();
+                        g.beginPath();
+                        g.rect(p * pw, y, pw, len);
+                        g.clip();
+                        g.fillStyle = `hsl(${h},${s}%,${l}%)`;
+                        g.fillRect(p * pw, y, pw, len);
+                        for (let k = 0; k < 34; k++) {
+                            const x0 = p * pw + Math.random() * pw;
+                            const amp = 2 + Math.random() * 5;
+                            const fq = 0.004 + Math.random() * 0.01;
+                            g.strokeStyle = `hsla(${h},${s + 8}%,${l - 12 + Math.random() * 22}%,${0.12 + Math.random() * 0.3})`;
+                            g.lineWidth = 0.6 + Math.random() * 2.2;
+                            g.beginPath();
+                            for (let yy = y; yy <= y + len; yy += 6) {
+                                const xx = x0 + Math.sin(yy * fq + k) * amp;
+                                yy === y ? g.moveTo(xx, yy) : g.lineTo(xx, yy);
+                            }
+                            g.stroke();
+                        }
+                        if (Math.random() < 0.35) {
+                            const kx = p * pw + pw * (0.25 + Math.random() * 0.5), ky = y + len * Math.random();
+                            const grd = g.createRadialGradient(kx, ky, 1, kx, ky, pw * 0.16);
+                            grd.addColorStop(0, `hsla(${h},50%,${l - 16}%,0.85)`);
+                            grd.addColorStop(1, `hsla(${h},50%,${l - 16}%,0)`);
+                            g.fillStyle = grd;
+                            g.beginPath();
+                            g.ellipse(kx, ky, pw * 0.12, pw * 0.22, 0, 0, Math.PI * 2);
+                            g.fill();
+                        }
+                        const shade = g.createLinearGradient(p * pw, 0, (p + 1) * pw, 0);
+                        shade.addColorStop(0, 'rgba(0,0,0,0.18)');
+                        shade.addColorStop(0.5, 'rgba(255,255,255,0.03)');
+                        shade.addColorStop(1, 'rgba(0,0,0,0.18)');
+                        g.fillStyle = shade;
+                        g.fillRect(p * pw, y, pw, len);
+                        g.restore();
+                        g.fillStyle = 'rgba(0,0,0,0.65)';
+                        g.fillRect(p * pw, y + len - 1.5, pw, 3);
+                        y += len;
+                    }
+                    g.fillStyle = 'rgba(0,0,0,0.7)';
+                    g.fillRect(p * pw, 0, 3, size);
+                }
+                this.noise(g, size, size, 9000, 0.05);
+                return c;
+            },
+
+            wicker(size = 512) {
+                const [c, g] = this.canvas(size, size);
+                g.fillStyle = '#2e1d0e';
+                g.fillRect(0, 0, size, size);
+                const rowH = size / 16, stakeW = size / 8;
+                for (let r = 0; r < 16; r++) {
+                    const y = r * rowH;
+                    const l = 44 + Math.random() * 10;
+                    const grd = g.createLinearGradient(0, y, 0, y + rowH);
+                    grd.addColorStop(0, `hsl(33,45%,${l - 22}%)`);
+                    grd.addColorStop(0.45, `hsl(36,55%,${l + 8}%)`);
+                    grd.addColorStop(1, `hsl(30,45%,${l - 26}%)`);
+                    g.fillStyle = grd;
+                    roundRect(g, -4, y + 1.5, size + 8, rowH - 3, rowH * 0.45);
+                    g.fill();
+                    for (let s = 0; s < 8; s++) {
+                        const x = s * stakeW + stakeW / 2 + ((r % 2) ? stakeW / 2 : 0);
+                        // poteau qui passe par-dessus le brin
+                        const sx = ((x % size) + size) % size;
+                        const sg = g.createLinearGradient(sx - 9, 0, sx + 9, 0);
+                        sg.addColorStop(0, 'hsl(30,40%,22%)');
+                        sg.addColorStop(0.5, 'hsl(35,50%,46%)');
+                        sg.addColorStop(1, 'hsl(30,40%,20%)');
+                        g.fillStyle = sg;
+                        roundRect(g, sx - 9, y - 1, 18, rowH + 2, 7);
+                        g.fill();
+                    }
+                    g.fillStyle = 'rgba(0,0,0,0.35)';
+                    g.fillRect(0, y + rowH - 1.5, size, 1.5);
+                }
+                this.noise(g, size, size, 5000, 0.06);
+                return c;
+            },
+
+            background() {
+                const [c, g] = this.canvas(4, 512);
+                const grd = g.createLinearGradient(0, 0, 0, 512);
+                grd.addColorStop(0, '#0b0d1c');
+                grd.addColorStop(0.55, '#171627');
+                grd.addColorStop(1, '#221a20');
+                g.fillStyle = grd;
+                g.fillRect(0, 0, 4, 512);
+                return c;
+            },
+
+            cardFront(name, w, h) {
+                const [c, g] = this.canvas(w, h);
+                g.fillStyle = '#fbf6ea';
+                g.fillRect(0, 0, w, h);
+                this.noise(g, w, h, w * 2, 0.035);
+                const vig = g.createRadialGradient(w / 2, h / 2, h * 0.3, w / 2, h / 2, w * 0.62);
+                vig.addColorStop(0, 'rgba(255,255,255,0)');
+                vig.addColorStop(1, 'rgba(150,120,70,0.16)');
+                g.fillStyle = vig;
+                g.fillRect(0, 0, w, h);
+                const m = w * 0.035;
+                g.strokeStyle = 'rgba(176,132,52,0.55)';
+                g.lineWidth = w * 0.006;
+                roundRect(g, m, m, w - 2 * m, h - 2 * m, w * 0.03);
+                g.stroke();
+                g.lineWidth = w * 0.002;
+                roundRect(g, m * 1.6, m * 1.6, w - 3.2 * m, h - 3.2 * m, w * 0.024);
+                g.stroke();
+                g.fillStyle = '#1d2433';
+                g.textAlign = 'center';
+                g.textBaseline = 'middle';
+                drawFittedText(g, name, w / 2, h / 2 + h * 0.02, w * 0.84, h * 0.7, 700, "'Poppins', sans-serif");
+                return c;
+            },
+
+            cardBack(w, h) {
+                const [c, g] = this.canvas(w, h);
+                g.fillStyle = '#f1e6cf';
+                g.fillRect(0, 0, w, h);
+                g.strokeStyle = 'rgba(160,118,50,0.12)';
+                g.lineWidth = 3;
+                for (let x = -h; x < w; x += 18) {
+                    g.beginPath(); g.moveTo(x, 0); g.lineTo(x + h, h); g.stroke();
+                    g.beginPath(); g.moveTo(x + h, 0); g.lineTo(x, h); g.stroke();
+                }
+                this.noise(g, w, h, w * 2, 0.04);
+                const cx = w / 2, cy = h / 2, R = h * 0.26;
+                g.fillStyle = 'rgba(176,132,52,0.55)';
+                g.beginPath();
+                for (let i = 0; i < 16; i++) {
+                    const r = i % 2 ? R * 0.42 : R;
+                    const a = (i / 16) * Math.PI * 2 - Math.PI / 2;
+                    i ? g.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r) : g.moveTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+                }
+                g.closePath();
+                g.fill();
+                return c;
+            },
+
+            plaque(name, count, cap, color) {
+                const [c, g] = this.canvas(512, 192);
+                g.clearRect(0, 0, 512, 192);
+                roundRect(g, 4, 4, 504, 184, 26);
+                g.fillStyle = '#f7f0e0';
+                g.fill();
+                g.save();
+                g.clip();
+                this.noise(g, 512, 192, 1500, 0.04);
+                g.fillStyle = color;
+                g.fillRect(0, 0, 512, 34);
+                g.restore();
+                g.lineWidth = 5;
+                g.strokeStyle = 'rgba(80,60,30,0.35)';
+                roundRect(g, 4, 4, 504, 184, 26);
+                g.stroke();
+                g.fillStyle = '#1d2433';
+                g.textAlign = 'center';
+                g.textBaseline = 'middle';
+                drawFittedText(g, name, 256, 86, 460, 84, 700, "'Poppins', sans-serif");
+                g.font = "700 40px 'Inter', sans-serif";
+                g.fillStyle = count >= cap && cap > 0 ? '#14744a' : '#2b3040';
+                g.fillText(`${count} / ${cap}`, 256, 152);
+                return c;
+            }
+        };
+
+        // ================================================================
+        //  SCÈNE 3D
+        // ================================================================
+        class Stage {
+            constructor(container) {
+                this.container = container;
+                this.disposables = [];
+                this.cards = [];
+                this.baskets = [];
+                this.lines = [];
+                this.energy = { v: 0 };
+                this.pointer = { x: 0, y: 0 };
+                this.clock = new THREE.Clock();
+                this.time = 0;
+
+                const r = this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+                r.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                r.setSize(window.innerWidth, window.innerHeight);
+                r.outputEncoding = THREE.sRGBEncoding;
+                r.toneMapping = THREE.ACESFilmicToneMapping;
+                r.toneMappingExposure = 0.95;
+                r.shadowMap.enabled = true;
+                r.shadowMap.type = THREE.PCFSoftShadowMap;
+                container.appendChild(r.domElement);
+                this.maxAniso = r.capabilities.getMaxAnisotropy();
+
+                const scene = this.scene = new THREE.Scene();
+                const bg = new THREE.CanvasTexture(Tex.background());
+                bg.encoding = THREE.sRGBEncoding;
+                scene.background = bg;
+                scene.fog = new THREE.Fog(0x221a20, 30, 80);
+
+                this.camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 300);
+                this.view = {
+                    basePos: new THREE.Vector3(0, 10, 22), baseTarget: new THREE.Vector3(0, 3, 0),
+                    goalPos: new THREE.Vector3(0, 10, 22), goalTarget: new THREE.Vector3(0, 3, 0),
+                    pos: new THREE.Vector3(0, 14, 30), target: new THREE.Vector3(0, 3, 0)
+                };
+
+                this.buildEnvironmentMap();
+                this.buildLights();
+                this.buildFloor();
+                this.buildConfetti();
+
+                window.addEventListener('resize', () => this.onResize());
+                window.addEventListener('pointermove', (e) => {
+                    this.pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+                    this.pointer.y = (e.clientY / window.innerHeight) * 2 - 1;
+                });
+                this.loop();
+            }
+
+            // Éclairage d'ambiance réaliste (reflets) : petite "pièce" virtuelle avec softbox
+            buildEnvironmentMap() {
+                const env = new THREE.Scene();
+                const geos = [];
+                const box = new THREE.BoxGeometry(1, 1, 1);
+                geos.push(box);
+                const room = new THREE.Mesh(box, new THREE.MeshBasicMaterial({ color: 0x2c2733, side: THREE.BackSide }));
+                room.scale.set(30, 14, 30);
+                room.position.y = 6;
+                env.add(room);
+                const panel = (w, h, color, intensity, pos, rot) => {
+                    const geo = new THREE.PlaneGeometry(w, h);
+                    geos.push(geo);
+                    const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+                        color: new THREE.Color(color).multiplyScalar(intensity), side: THREE.DoubleSide
+                    }));
+                    m.position.set(...pos);
+                    m.rotation.set(...rot);
+                    env.add(m);
+                };
+                panel(12, 8, 0xfff0d8, 5, [0, 12.8, 0], [Math.PI / 2, 0, 0]);
+                panel(6, 6, 0xbcd4ff, 2.2, [-14.8, 6, -3], [0, Math.PI / 2, 0]);
+                panel(8, 5, 0xffd2a0, 1.6, [6, 5, 14.8], [0, Math.PI, 0]);
+                panel(4, 10, 0xffffff, 1.2, [14.8, 6, 4], [0, -Math.PI / 2, 0]);
+                const pmrem = new THREE.PMREMGenerator(this.renderer);
+                this.scene.environment = pmrem.fromScene(env, 0.04).texture;
+                pmrem.dispose();
+                geos.forEach(g => g.dispose());
+            }
+
+            buildLights() {
+                const s = this.scene;
+                s.add(new THREE.HemisphereLight(0xc9d8ff, 0x3a2a1a, 0.25));
+
+                const key = this.keyLight = new THREE.DirectionalLight(0xfff0dc, 2.1);
+                key.position.set(9, 20, 12);
+                key.castShadow = true;
+                key.shadow.mapSize.set(2048, 2048);
+                key.shadow.bias = -0.0004;
+                key.shadow.normalBias = 0.02;
+                key.shadow.radius = 4;
+                s.add(key);
+                s.add(key.target);
+
+                const rim = new THREE.DirectionalLight(0x9db8ff, 0.6);
+                rim.position.set(-12, 9, -12);
+                s.add(rim);
+
+                const spot = this.spot = new THREE.SpotLight(0xffd9a0, 0, 60, 0.28, 0.6, 1.2);
+                spot.position.set(0, 18, 14);
+                spot.castShadow = false;
+                s.add(spot);
+                s.add(spot.target);
+                this.spotFollow = null;
+            }
+
+            buildFloor() {
+                const tex = new THREE.CanvasTexture(Tex.wood(1024, 7, 24, 22));
+                tex.encoding = THREE.sRGBEncoding;
+                tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+                tex.repeat.set(9, 9);
+                tex.anisotropy = this.maxAniso;
+                const bump = new THREE.CanvasTexture(tex.image);
+                bump.wrapS = bump.wrapT = THREE.RepeatWrapping;
+                bump.repeat.copy(tex.repeat);
+                const floor = new THREE.Mesh(
+                    new THREE.PlaneGeometry(160, 160),
+                    new THREE.MeshStandardMaterial({ map: tex, bumpMap: bump, bumpScale: 0.025, roughness: 0.48, metalness: 0, envMapIntensity: 0.55 })
+                );
+                floor.rotation.x = -Math.PI / 2;
+                floor.receiveShadow = true;
+                this.scene.add(floor);
+
+                // Bois clair partagé (poteaux, pinces)
+                const lw = new THREE.CanvasTexture(Tex.wood(512, 3, 32, 52));
+                lw.encoding = THREE.sRGBEncoding;
+                lw.wrapS = lw.wrapT = THREE.RepeatWrapping;
+                this.lightWoodMat = new THREE.MeshStandardMaterial({ map: lw, roughness: 0.6, envMapIntensity: 0.7 });
+                this.ropeMat = new THREE.MeshStandardMaterial({ color: 0xe9dfc8, roughness: 0.95 });
+                this.metalMat = new THREE.MeshStandardMaterial({ color: 0xb8bcc4, roughness: 0.3, metalness: 1 });
+
+                const wk = new THREE.CanvasTexture(Tex.wicker(512));
+                wk.encoding = THREE.sRGBEncoding;
+                wk.wrapS = wk.wrapT = THREE.RepeatWrapping;
+                wk.repeat.set(10, 3);
+                wk.anisotropy = this.maxAniso;
+                const wkBump = new THREE.CanvasTexture(wk.image);
+                wkBump.wrapS = wkBump.wrapT = THREE.RepeatWrapping;
+                wkBump.repeat.copy(wk.repeat);
+                this.wickerMat = new THREE.MeshStandardMaterial({
+                    map: wk, bumpMap: wkBump, bumpScale: 0.05, roughness: 0.82, side: THREE.DoubleSide, envMapIntensity: 0.6
+                });
+                const rimTex = wk.clone();
+                rimTex.needsUpdate = true;
+                rimTex.repeat.set(24, 1);
+                this.rimMat = new THREE.MeshStandardMaterial({ map: rimTex, roughness: 0.8 });
+
+                const backC = Tex.cardBack(512, 256);
+                const backTex = new THREE.CanvasTexture(backC);
+                backTex.encoding = THREE.sRGBEncoding;
+                backTex.anisotropy = this.maxAniso;
+                this.cardBackMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.85 });
+                this.cardEdgeMat = new THREE.MeshStandardMaterial({ color: 0xe6dcc5, roughness: 0.9 });
+            }
+
+            buildConfetti() {
+                const N = this.confettiCount = 450;
+                const mesh = this.confetti = new THREE.InstancedMesh(
+                    new THREE.PlaneGeometry(0.16, 0.09),
+                    new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, roughness: 0.45, metalness: 0.25 }),
+                    N
+                );
+                mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+                mesh.frustumCulled = false;
+                const dummy = this.dummy = new THREE.Object3D();
+                dummy.scale.setScalar(0);
+                dummy.updateMatrix();
+                const color = new THREE.Color();
+                this.particles = [];
+                for (let i = 0; i < N; i++) {
+                    mesh.setMatrixAt(i, dummy.matrix);
+                    mesh.setColorAt(i, color.set(PALETTE[i % PALETTE.length]));
+                    this.particles.push({ p: new THREE.Vector3(), v: new THREE.Vector3(), r: new THREE.Euler(), w: new THREE.Vector3(), on: false, rest: false, ph: Math.random() * 6 });
+                }
+                this.scene.add(mesh);
+            }
+
+            // ------------------------------------------------------------
+            //  Construction de la scène (cartes + paniers)
+            // ------------------------------------------------------------
+            clear() {
+                gsap.killTweensOf(this.energy);
+                [...this.cards, ...this.baskets, ...this.lines].forEach(o => {
+                    if (o.root) this.scene.remove(o.root);
+                    if (o.mesh && o.mesh.parent) o.mesh.parent.remove(o.mesh);
+                });
+                this.disposables.forEach(d => d.dispose());
+                this.disposables = [];
+                this.cards = [];
+                this.baskets = [];
+                this.lines = [];
+                this.clearConfetti();
+                this.spot.intensity = 0;
+                this.spotFollow = null;
+            }
+
+            makeCardGeometry(w, h) {
+                const r = Math.min(w, h) * 0.08;
+                const shape = new THREE.Shape();
+                shape.moveTo(-w / 2 + r, -h / 2);
+                shape.lineTo(w / 2 - r, -h / 2);
+                shape.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r);
+                shape.lineTo(w / 2, h / 2 - r);
+                shape.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2);
+                shape.lineTo(-w / 2 + r, h / 2);
+                shape.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r);
+                shape.lineTo(-w / 2, -h / 2 + r);
+                shape.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
+                const geo = new THREE.ExtrudeGeometry(shape, {
+                    depth: 0.012, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 1, curveSegments: 4
+                });
+                geo.translate(0, 0, -0.006);
+                // UV normalisés sur la face
+                const pos = geo.attributes.position, uv = geo.attributes.uv;
+                for (let i = 0; i < pos.count; i++) {
+                    uv.setXY(i, (pos.getX(i) + w / 2) / w, (pos.getY(i) + h / 2) / h);
+                }
+                // Groupes : [dos, face, tranche] -> matériaux [face=0, tranche=1, dos=2]
+                const [caps, sides] = geo.groups;
+                const half = caps.count / 2;
+                geo.clearGroups();
+                geo.addGroup(0, half, 2);
+                geo.addGroup(half, half, 0);
+                geo.addGroup(sides.start, sides.count, 1);
+                return geo;
+            }
+
+            build(names, groups) {
+                this.clear();
+                const N = names.length, G = groups.length;
+                const s = this.cardScale = N <= 16 ? 1 : N <= 32 ? 0.85 : N <= 60 ? 0.72 : 0.6;
+                const cw = 1.8 * s, ch = 1.0 * s;
+                this.cardSize = { w: cw, h: ch };
+                const texW = N > 40 ? 512 : 1024, texH = texW / 2;
+
+                const cardGeo = this.makeCardGeometry(cw, ch);
+                this.disposables.push(cardGeo);
+
+                // --- Cordes à linge ---
+                const portrait = window.innerWidth / window.innerHeight < 0.85;
+                this.builtPortrait = portrait;
+                const maxPerLine = portrait ? 6 : 12;
+                const nLines = Math.max(1, Math.ceil(N / maxPerLine));
+                const perLine = Math.max(1, Math.ceil(N / nLines));
+                const spacing = cw + 0.35 * s;
+                const lineLen = Math.max(perLine, 4) * spacing + 1.6;
+                this.layout = { halfW: lineLen / 2, top: 0, back: 0, front: 0, points: [] };
+
+                const pinGeo = new THREE.BoxGeometry(0.07, 0.36, 0.045);
+                const springGeo = new THREE.TorusGeometry(0.035, 0.009, 6, 12);
+                const postGeo = new THREE.CylinderGeometry(0.09, 0.11, 1, 12);
+                this.disposables.push(pinGeo, springGeo, postGeo);
+
+                for (let li = 0; li < nLines; li++) {
+                    const y = 4.6 + li * 1.75 * Math.max(s, 0.8);
+                    const z = -1.2 - li * 2.3;
+                    const sag = 0.22 + lineLen * 0.006;
+                    const half = lineLen / 2;
+                    const lineY = (x) => y - sag * (1 - Math.pow(x / half, 2));
+                    const pts = [];
+                    for (let i = 0; i <= 24; i++) {
+                        const x = -half + (i / 24) * lineLen;
+                        pts.push(new THREE.Vector3(x, lineY(x), z));
+                    }
+                    const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 64, 0.016, 6, false);
+                    this.disposables.push(tube);
+                    const root = new THREE.Group();
+                    const rope = new THREE.Mesh(tube, this.ropeMat);
+                    rope.castShadow = true;
+                    root.add(rope);
+                    [-half, half].forEach(x => {
+                        const post = new THREE.Mesh(postGeo, this.lightWoodMat);
+                        post.scale.y = y + 0.35;
+                        post.position.set(x, (y + 0.35) / 2, z);
+                        post.castShadow = true;
+                        post.receiveShadow = true;
+                        root.add(post);
+                    });
+                    this.scene.add(root);
+                    this.lines.push({ root, y, z, lineY });
+                    this.layout.top = Math.max(this.layout.top, y + 0.4);
+                    [-half - 0.2, half + 0.2].forEach(x => this.layout.points.push(new THREE.Vector3(x, 0, z), new THREE.Vector3(x, y + 0.4, z)));
+                    this.layout.back = Math.min(this.layout.back, z - 0.5);
+                }
+
+                // --- Cartes ---
+                names.forEach((name, i) => {
+                    const li = Math.floor(i / perLine);
+                    const line = this.lines[li];
+                    const countOnLine = Math.min(perLine, N - li * perLine);
+                    const idx = i - li * perLine;
+                    const x = (idx - (countOnLine - 1) / 2) * spacing;
+                    const ly = line.lineY(x);
+
+                    const tex = new THREE.CanvasTexture(Tex.cardFront(name, texW, texH));
+                    tex.encoding = THREE.sRGBEncoding;
+                    tex.anisotropy = this.maxAniso;
+                    const front = new THREE.MeshStandardMaterial({
+                        map: tex, roughness: 0.82, emissive: 0xffc46b, emissiveIntensity: 0, envMapIntensity: 0.5
+                    });
+                    this.disposables.push(tex, front);
+
+                    const root = new THREE.Group();
+                    root.position.set(x, ly, line.z);
+                    // Pince à linge
+                    const pinA = new THREE.Mesh(pinGeo, this.lightWoodMat);
+                    pinA.position.set(0, -0.06, 0.03);
+                    const pinB = pinA.clone();
+                    pinB.position.z = -0.03;
+                    const spring = new THREE.Mesh(springGeo, this.metalMat);
+                    spring.rotation.y = Math.PI / 2;
+                    spring.position.y = -0.02;
+                    [pinA, pinB, spring].forEach(m => { m.castShadow = true; root.add(m); });
+
+                    const hanger = new THREE.Group();
+                    hanger.position.y = -0.12;
+                    root.add(hanger);
+                    const mesh = new THREE.Mesh(cardGeo, [front, this.cardEdgeMat, this.cardBackMat]);
+                    mesh.position.y = -ch / 2;
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+                    hanger.add(mesh);
+                    this.scene.add(root);
+
+                    this.cards.push({ name, root, hanger, mesh, front, dropped: false, phase: Math.random() * Math.PI * 2 });
+                });
+
+                // --- Paniers ---
+                const maxPerRow = portrait ? 4 : 6;
+                const perRow = G <= maxPerRow ? G : Math.ceil(G / Math.ceil(G / maxPerRow));
+                const rows = Math.ceil(G / perRow);
+                const bs = G <= maxPerRow ? 1.15 : G <= 12 ? 1 : 0.85;
+                const bSpacing = 3.7 * bs;
+                const profile = [
+                    [0, 0.02], [0.98, 0.02], [1.06, 0.08], [1.22, 0.6], [1.4, 1.2], [1.46, 1.34],
+                    [1.42, 1.4], [1.36, 1.32], [1.31, 1.2], [1.15, 0.6], [0.99, 0.14], [0, 0.14]
+                ].map(([x, y]) => new THREE.Vector2(x, y * 0.8));
+                const lathe = new THREE.LatheGeometry(profile, 56);
+                const rimGeo = new THREE.TorusGeometry(1.44, 0.075, 10, 64);
+                const ribbonGeo = new THREE.TorusGeometry(1.37, 0.045, 8, 64);
+                const handleGeo = new THREE.TorusGeometry(0.32, 0.05, 8, 24, Math.PI);
+                const plaqueGeo = new THREE.PlaneGeometry(1.9, 0.71);
+                const standGeo = new THREE.BoxGeometry(1.95, 0.08, 0.5);
+                this.disposables.push(lathe, rimGeo, ribbonGeo, handleGeo, plaqueGeo, standGeo);
+
+                groups.forEach((grp, gi) => {
+                    const row = Math.floor(gi / perRow);
+                    const inRow = Math.min(perRow, G - row * perRow);
+                    const col = gi - row * perRow;
+                    const x = (col - (inRow - 1) / 2) * bSpacing + (rows > 1 && row % 2 ? bSpacing * 0.5 : 0);
+                    const z = 4.4 + (row - (rows - 1)) * 4.3 * bs;
+
+                    const root = new THREE.Group();
+                    root.position.set(x, 0, z);
+                    root.scale.setScalar(bs);
+                    const body = new THREE.Mesh(lathe, this.wickerMat);
+                    body.castShadow = true;
+                    body.receiveShadow = true;
+                    root.add(body);
+                    const rim = new THREE.Mesh(rimGeo, this.rimMat);
+                    rim.rotation.x = Math.PI / 2;
+                    rim.position.y = 1.1;
+                    rim.castShadow = true;
+                    root.add(rim);
+                    const ribbonMat = new THREE.MeshStandardMaterial({ color: grp.color, roughness: 0.4, emissive: grp.color, emissiveIntensity: 0 });
+                    this.disposables.push(ribbonMat);
+                    const ribbon = new THREE.Mesh(ribbonGeo, ribbonMat);
+                    ribbon.rotation.x = Math.PI / 2;
+                    ribbon.position.y = 0.88;
+                    ribbon.scale.set(1.025, 1.025, 1);
+                    root.add(ribbon);
+                    [-1, 1].forEach(side => {
+                        const hdl = new THREE.Mesh(handleGeo, this.rimMat);
+                        hdl.position.set(side * 1.47, 1.06, 0);
+                        hdl.rotation.set(0, Math.PI / 2, 0);
+                        hdl.castShadow = true;
+                        root.add(hdl);
+                    });
+
+                    // Étiquette posée devant le panier
+                    const pc = Tex.plaque(grp.name, 0, grp.capacity, grp.color);
+                    const ptex = new THREE.CanvasTexture(pc);
+                    ptex.encoding = THREE.sRGBEncoding;
+                    ptex.anisotropy = this.maxAniso;
+                    const pmat = new THREE.MeshStandardMaterial({ map: ptex, transparent: true, alphaTest: 0.5, roughness: 0.75, side: THREE.DoubleSide });
+                    this.disposables.push(ptex, pmat);
+                    const plaque = new THREE.Mesh(plaqueGeo, pmat);
+                    plaque.position.set(0, 0.42, 1.75);
+                    plaque.rotation.x = -0.75;
+                    plaque.castShadow = true;
+                    root.add(plaque);
+                    const stand = new THREE.Mesh(standGeo, this.lightWoodMat);
+                    stand.position.set(0, 0.04, 1.85);
+                    stand.castShadow = true;
+                    stand.receiveShadow = true;
+                    root.add(stand);
+
+                    this.scene.add(root);
+                    this.baskets.push({ root, body, ribbonMat, ptex, grp, count: 0, scale: bs });
+                    this.layout.front = Math.max(this.layout.front, z + 2.4 * bs);
+                    this.layout.halfW = Math.max(this.layout.halfW, Math.abs(x) + 1.6 * bs);
+                    [-1.6, 1.6].forEach(dx => this.layout.points.push(
+                        new THREE.Vector3(x + dx * bs, 1.3 * bs, z - 1.5 * bs),
+                        new THREE.Vector3(x + dx * bs, 0, z + 2.2 * bs)));
+                });
+
+                this.fitCamera(true);
+            }
+
+            updatePlaque(b) {
+                b.ptex.image = Tex.plaque(b.grp.name, b.count, b.grp.capacity, b.grp.color);
+                b.ptex.needsUpdate = true;
+            }
+
+            fitCamera(snap) {
+                const L = this.layout;
+                if (!L) return;
+                const minZ = L.back, maxZ = L.front;
+                const center = new THREE.Vector3(0, L.top * 0.3, (minZ + maxZ) / 2);
+                const cam = this.camera;
+                cam.aspect = window.innerWidth / window.innerHeight;
+                cam.far = 2000;
+                cam.updateProjectionMatrix();
+                const elev = 0.55;
+                const dir = new THREE.Vector3(0, Math.sin(elev), Math.cos(elev));
+                // Distance minimale pour que tous les coins de la scène soient à l'écran
+                const corners = L.points;
+                const marginX = 0.97, marginTop = 0.74, marginBottom = 0.68; // place pour l'en-tête et la barre du bas
+                const fits = (d) => {
+                    cam.position.copy(center).addScaledVector(dir, d);
+                    cam.lookAt(center);
+                    cam.updateMatrixWorld();
+                    return corners.every(c => {
+                        const p = c.clone().project(cam);
+                        return Math.abs(p.z) < 1 && Math.abs(p.x) <= marginX && p.y <= marginTop && p.y >= -marginBottom;
+                    });
+                };
+                let lo = 2, hi = 400;
+                for (let i = 0; i < 30; i++) {
+                    const mid = (lo + hi) / 2;
+                    fits(mid) ? (hi = mid) : (lo = mid);
+                }
+                const dist = hi;
+                this.view.baseTarget.copy(center);
+                this.view.basePos.copy(center).addScaledVector(dir, dist);
+                this.view.goalPos.copy(this.view.basePos);
+                this.view.goalTarget.copy(this.view.baseTarget);
+                this.view.dist = dist;
+                if (snap === true) {
+                    this.view.pos.copy(this.view.basePos).add(new THREE.Vector3(0, dist * 0.25, dist * 0.35));
+                    this.view.target.copy(center);
+                }
+                cam.far = dist * 6;
+                cam.updateProjectionMatrix();
+                this.scene.fog.near = dist * 0.85;
+                this.scene.fog.far = dist * 2.1;
+
+                const k = this.keyLight;
+                const ext = Math.max(L.halfW, maxZ - minZ, L.top) + 4;
+                k.shadow.camera.left = -ext; k.shadow.camera.right = ext;
+                k.shadow.camera.top = ext; k.shadow.camera.bottom = -ext;
+                k.shadow.camera.near = 1; k.shadow.camera.far = 90;
+                k.position.set(center.x + 10, 22, center.z + 12);
+                k.target.position.copy(center);
+                k.shadow.camera.updateProjectionMatrix();
+            }
+
+            focus(point, amount = 0.35, zoom = 0.16) {
+                const v = this.view;
+                if (!point) {
+                    v.goalPos.copy(v.basePos);
+                    v.goalTarget.copy(v.baseTarget);
+                    return;
+                }
+                const shift = point.clone().sub(v.baseTarget).multiplyScalar(amount);
+                v.goalTarget.copy(v.baseTarget).add(shift);
+                const back = v.basePos.clone().sub(v.baseTarget).multiplyScalar(1 - zoom);
+                v.goalPos.copy(v.goalTarget).add(back);
+            }
+
+            // ------------------------------------------------------------
+            //  Animations du tirage
+            // ------------------------------------------------------------
+            shuffle(speed) {
+                const d = 2.6 * speed;
+                const tl = gsap.timeline();
+                tl.to(this.energy, { v: 1, duration: d * 0.35, ease: 'power2.in' }, 0);
+                tl.to(this.energy, { v: 0, duration: d * 0.45, ease: 'power2.out' }, d * 0.55);
+                this.cards.forEach((c, i) => {
+                    const turns = 1 + Math.floor(Math.random() * 3);
+                    tl.to(c.mesh.rotation, {
+                        y: c.mesh.rotation.y + Math.PI * 2 * turns,
+                        duration: d * 0.8,
+                        ease: 'power2.inOut'
+                    }, (i % 12) * 0.02 * speed);
+                });
+                tl.to(this.keyLight, { intensity: 1.2, duration: d * 0.4, yoyo: true, repeat: 1, ease: 'sine.inOut' }, 0);
+                this.currentTl = tl;
+                return new Promise(res => tl.eventCallback('onComplete', res));
+            }
+
+            landingFor(b) {
+                const s = b.scale;
+                const a = Math.random() * Math.PI * 2;
+                const rr = Math.random() * 0.28 * s;
+                const pos = new THREE.Vector3(
+                    b.root.position.x + Math.cos(a) * rr,
+                    (0.16 + Math.min(b.count, 40) * 0.018) * s,
+                    b.root.position.z + Math.sin(a) * rr
+                );
+                const rot = new THREE.Euler(-Math.PI / 2 + (Math.random() - 0.5) * 0.18, (Math.random() - 0.5) * 0.18, Math.random() * Math.PI * 2);
+                return { pos, rot };
+            }
+
+            dropCard(cardIdx, groupIdx, speed, onLand) {
+                const c = this.cards[cardIdx], b = this.baskets[groupIdx];
+                const { pos: end, rot: endRot } = this.landingFor(b);
+                b.count++;
+                const mesh = c.mesh;
+                const tl = gsap.timeline();
+                this.currentTl = tl;
+
+                const worldPos = new THREE.Vector3();
+                mesh.getWorldPosition(worldPos);
+                this.spotFollow = mesh;
+                this.spot.target.position.copy(worldPos);
+                this.focus(worldPos, 0.3, 0.12);
+
+                tl.to(this.spot, { intensity: 3.2, duration: 0.35 * speed }, 0);
+                tl.to(c.front, { emissiveIntensity: 0.35, duration: 0.35 * speed, ease: 'power2.out' }, 0);
+                tl.to(c.hanger.rotation, { x: -0.5, z: (Math.random() - 0.5) * 0.4, duration: 0.4 * speed, ease: 'back.out(2)' }, 0);
+                tl.to(mesh.scale, { x: 1.08, y: 1.08, z: 1.08, duration: 0.3 * speed, ease: 'back.out' }, 0);
+
+                const t0 = 0.55 * speed, fall = 1.35 * speed;
+                const p0 = new THREE.Vector3(), p1 = new THREE.Vector3();
+                const r0 = new THREE.Euler();
+                const spinY = Math.PI * 2 * (1 + Math.floor(Math.random() * 2));
+                const spinZ = Math.PI * 2 * (Math.random() < 0.5 ? 1 : -1);
+                const prog = { t: 0 };
+                tl.add(() => {
+                    this.scene.attach(mesh);
+                    c.dropped = true;
+                    c.hanger.rotation.set(0, 0, 0);
+                    p0.copy(mesh.position);
+                    r0.copy(mesh.rotation);
+                    p1.set((p0.x + end.x) / 2, Math.max(p0.y, end.y) + 2.2 * this.cardScale, (p0.z + end.z) / 2 + 1);
+                    this.focus(new THREE.Vector3().lerpVectors(p0, end, 0.6), 0.32, 0.12);
+                }, t0);
+                tl.to(prog, {
+                    t: 1, duration: fall, ease: 'power1.in',
+                    onUpdate: () => {
+                        const t = prog.t, u = 1 - t;
+                        mesh.position.set(
+                            u * u * p0.x + 2 * u * t * p1.x + t * t * end.x,
+                            u * u * p0.y + 2 * u * t * p1.y + t * t * end.y,
+                            u * u * p0.z + 2 * u * t * p1.z + t * t * end.z
+                        );
+                        const e = t * t * (3 - 2 * t);
+                        mesh.rotation.set(
+                            r0.x + (endRot.x - r0.x) * e + Math.sin(t * Math.PI * 3) * 0.25 * u,
+                            r0.y + (endRot.y + spinY - r0.y) * e,
+                            r0.z + (endRot.z + spinZ - r0.z) * e
+                        );
+                    }
+                }, t0);
+                tl.to(mesh.scale, { x: 1, y: 1, z: 1, duration: fall * 0.6 }, t0);
+                tl.add(() => {
+                    this.spotFollow = b.body;
+                    this.updatePlaque(b);
+                    if (onLand) onLand();
+                }, t0 + fall);
+                tl.fromTo(b.root.scale, { y: b.scale * 0.92 }, { y: b.scale, duration: 0.5 * speed + 0.15, ease: 'elastic.out(1.2, 0.35)' }, t0 + fall);
+                tl.to(b.ribbonMat, { emissiveIntensity: 0.9, duration: 0.15, yoyo: true, repeat: 1 }, t0 + fall);
+                tl.to(c.front, { emissiveIntensity: 0, duration: 0.4 * speed }, t0 + fall);
+                tl.to(this.spot, { intensity: 0, duration: 0.4 * speed }, t0 + fall + 0.1);
+                tl.add(() => this.focus(null), t0 + fall);
+                return new Promise(res => tl.eventCallback('onComplete', res));
+            }
+
+            placeInstant(cardIdx, groupIdx) {
+                const c = this.cards[cardIdx], b = this.baskets[groupIdx];
+                const { pos, rot } = this.landingFor(b);
+                b.count++;
+                this.scene.attach(c.mesh);
+                c.dropped = true;
+                c.hanger.rotation.set(0, 0, 0);
+                c.mesh.scale.setScalar(1);
+                c.mesh.position.copy(pos);
+                c.mesh.rotation.copy(rot);
+                c.front.emissiveIntensity = 0;
+                this.updatePlaque(b);
+            }
+
+            finishCurrent() {
+                if (this.currentTl) this.currentTl.progress(1);
+            }
+
+            celebrate() {
+                this.spot.intensity = 0;
+                this.spotFollow = null;
+                this.focus(null);
+                this.baskets.forEach((b, i) => {
+                    gsap.to(b.ribbonMat, { emissiveIntensity: 1, duration: 0.35, delay: i * 0.08, yoyo: true, repeat: 3 });
+                    gsap.fromTo(b.root.position, { y: 0 }, { y: 0.35 * b.scale, duration: 0.25, delay: i * 0.08, yoyo: true, repeat: 1, ease: 'power2.out' });
+                });
+                const origins = this.baskets.map(b => b.root.position);
+                this.particles.forEach((pt, i) => {
+                    const o = origins[i % origins.length];
+                    pt.p.set(o.x + (Math.random() - 0.5) * 1.5, 1.6, o.z + (Math.random() - 0.5) * 1.5);
+                    pt.v.set((Math.random() - 0.5) * 5, 6 + Math.random() * 6, (Math.random() - 0.5) * 5);
+                    pt.r.set(Math.random() * 6, Math.random() * 6, Math.random() * 6);
+                    pt.w.set((Math.random() - 0.5) * 14, (Math.random() - 0.5) * 14, (Math.random() - 0.5) * 14);
+                    pt.on = true;
+                    pt.rest = false;
+                });
+            }
+
+            clearConfetti() {
+                if (!this.particles) return;
+                this.dummy.scale.setScalar(0);
+                this.dummy.updateMatrix();
+                this.particles.forEach((pt, i) => {
+                    pt.on = false;
+                    this.confetti.setMatrixAt(i, this.dummy.matrix);
+                });
+                this.confetti.instanceMatrix.needsUpdate = true;
+            }
+
+            updateConfetti(dt) {
+                let any = false;
+                const d = this.dummy;
+                this.particles.forEach((pt, i) => {
+                    if (!pt.on) return;
+                    any = true;
+                    if (!pt.rest) {
+                        pt.v.y -= 9.8 * 0.55 * dt;
+                        pt.v.multiplyScalar(1 - Math.min(dt * 1.1, 0.5));
+                        pt.p.addScaledVector(pt.v, dt);
+                        pt.p.x += Math.sin(this.time * 3 + pt.ph) * dt * 0.6;
+                        pt.r.x += pt.w.x * dt; pt.r.y += pt.w.y * dt; pt.r.z += pt.w.z * dt;
+                        if (pt.p.y <= 0.012) {
+                            pt.p.y = 0.012;
+                            pt.r.set(-Math.PI / 2, 0, pt.r.z);
+                            pt.rest = true;
+                        }
+                    }
+                    d.position.copy(pt.p);
+                    d.rotation.copy(pt.r);
+                    d.scale.setScalar(1);
+                    d.updateMatrix();
+                    this.confetti.setMatrixAt(i, d.matrix);
+                });
+                if (any) this.confetti.instanceMatrix.needsUpdate = true;
+            }
+
+            // ------------------------------------------------------------
+            loop() {
+                requestAnimationFrame(() => this.loop());
+                const dt = Math.min(this.clock.getDelta(), 0.05);
+                this.time += dt;
+                const t = this.time, e = this.energy.v;
+
+                // Balancement des cartes (vent léger, plus fort pendant le mélange)
+                const gust = 0.6 + 0.4 * Math.sin(t * 0.37) * Math.sin(t * 0.23);
+                this.cards.forEach(c => {
+                    if (c.dropped) return;
+                    const amp = (0.035 * gust + e * 0.35);
+                    c.root.rotation.z = Math.sin(t * (1.3 + e * 4) + c.phase) * amp * 0.5;
+                    if (!gsap.isTweening(c.hanger.rotation)) {
+                        c.hanger.rotation.x = Math.sin(t * (1.1 + e * 5) + c.phase * 1.7) * amp;
+                        c.hanger.rotation.z = Math.sin(t * (0.9 + e * 3) + c.phase * 0.6) * amp * 0.4;
+                    }
+                });
+
+                this.updateConfetti(dt);
+
+                if (this.spotFollow) {
+                    const wp = new THREE.Vector3();
+                    this.spotFollow.getWorldPosition(wp);
+                    this.spot.target.position.lerp(wp, 1 - Math.exp(-dt * 10));
+                }
+
+                const v = this.view;
+                const k = 1 - Math.exp(-dt * 2.4);
+                v.pos.lerp(v.goalPos, k);
+                v.target.lerp(v.goalTarget, k);
+                const dist = v.dist || 20;
+                this.camera.position.set(
+                    v.pos.x + this.pointer.x * dist * 0.03 + Math.sin(t * 0.12) * dist * 0.012,
+                    v.pos.y - this.pointer.y * dist * 0.015,
+                    v.pos.z
+                );
+                this.camera.lookAt(v.target);
+                this.renderer.render(this.scene, this.camera);
+            }
+
+            onResize() {
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.fitCamera(false);
+                const portrait = window.innerWidth / window.innerHeight < 0.85;
+                if (portrait !== this.builtPortrait && this.onLayoutChange) this.onLayoutChange();
+            }
+        }
+
+        // ================================================================
+        //  APPLICATION
+        // ================================================================
+        const App = {
+            settings: {
+                title: 'Ma classe',
+                namesText: '',
+                mode: 'count',
+                count: 4,
+                size: 3,
+                remainder: 'balance',
+                groupNamesText: '',
+                speed: 'normal'
+            },
+            names: [],
+            plan: null,
+            stage: null,
+            drawing: false,
+            skip: false,
+            results: null,
+
+            async init() {
+                Object.assign(this.settings, storage.load());
+                this.bindUI();
+                this.applySettingsToUI();
+
                 try {
-                    const canvas = document.createElement('canvas');
-                    return !!(window.WebGLRenderingContext && 
-                        (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+                    if (window.THREE && window.gsap && this.hasWebGL()) this.stage = new Stage($('stage'));
                 } catch (e) {
-                    return false;
+                    console.error(e);
+                    this.stage = null;
                 }
+                if (!this.stage) $('noWebgl').style.display = 'block';
+                else this.stage.onLayoutChange = () => { if (!this.drawing && !this.results) this.rebuildScene(); };
+
+                // Attendre la police pour que les cartes soient bien écrites
+                try {
+                    await Promise.race([
+                        Promise.all([document.fonts.load("700 64px 'Poppins'"), document.fonts.load("600 32px 'Inter'")]),
+                        new Promise(r => setTimeout(r, 2500))
+                    ]);
+                } catch (e) { /* police indisponible : police système */ }
+
+                this.refresh('now');
+                if (this.names.length < 2) $('onboarding').classList.remove('hidden');
             },
 
-            // ========== SCENE 3D ==========
-            initScene() {
-                const container = document.getElementById('canvas-container');
-                this.state.scene = new THREE.Scene();
-                this.state.scene.background = new THREE.Color(0x0f0f1e);
-                this.state.scene.fog = new THREE.Fog(0x16213e, 60, 220);
-
-                this.state.camera = new THREE.PerspectiveCamera(
-                    60, 
-                    window.innerWidth / window.innerHeight, 
-                    0.1, 
-                    1000
-                );
-                this.state.camera.position.set(0, 12, 15);
-                this.state.camera.lookAt(0, 0, 0);
-
-                this.state.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-                this.state.renderer.setSize(window.innerWidth, window.innerHeight);
-                this.state.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-                this.state.renderer.shadowMap.enabled = true;
-                this.state.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-                container.appendChild(this.state.renderer.domElement);
-
-                // Lighting
-                const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-                this.state.scene.add(ambientLight);
-
-                const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1);
-                directionalLight1.position.set(12, 18, 12);
-                directionalLight1.castShadow = true;
-                directionalLight1.shadow.mapSize.width = 2048;
-                directionalLight1.shadow.mapSize.height = 2048;
-                directionalLight1.shadow.camera.far = 100;
-                this.state.scene.add(directionalLight1);
-
-                const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.3);
-                directionalLight2.position.set(-12, 12, -12);
-                this.state.scene.add(directionalLight2);
-
-                // Ground
-                const groundGeometry = new THREE.PlaneGeometry(50, 50);
-                const groundMaterial = new THREE.MeshStandardMaterial({
-                    color: 0x1a1a2e,
-                    roughness: 0.9,
-                    metalness: 0.05
-                });
-                const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-                ground.rotation.x = -Math.PI / 2;
-                ground.position.y = -1.5;
-                ground.receiveShadow = true;
-                this.state.scene.add(ground);
-
-                window.addEventListener('resize', () => this.onWindowResize());
-                window.addEventListener('keydown', (e) => this.onKeyDown(e));
+            hasWebGL() {
+                try {
+                    const c = document.createElement('canvas');
+                    return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl')));
+                } catch (e) { return false; }
             },
 
-            createNameCard(studentName, index, total) {
-                const geometry = new THREE.BoxGeometry(2.5, 1.8, 0.12);
-                
-                const canvas = document.createElement('canvas');
-                canvas.width = 1024;
-                canvas.height = 512;
-                const ctx = canvas.getContext('2d');
-                
-                const gradient = ctx.createLinearGradient(0, 0, 1024, 512);
-                gradient.addColorStop(0, '#ffffff');
-                gradient.addColorStop(1, '#f5f5f5');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, 1024, 512);
-                
-                ctx.strokeStyle = 'rgba(255, 224, 102, 0.25)';
-                ctx.lineWidth = 4;
-                ctx.strokeRect(12, 12, 1000, 488);
-                
-                ctx.fillStyle = 'rgba(26, 26, 46, 0.08)';
-                ctx.font = 'bold 92px Poppins';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(studentName, 516, 268);
-                
-                ctx.fillStyle = '#1a1a2e';
-                ctx.fillText(studentName, 512, 256);
-                
-                const texture = new THREE.CanvasTexture(canvas);
-                texture.minFilter = THREE.LinearFilter;
-                texture.magFilter = THREE.LinearFilter;
-                
-                const material = new THREE.MeshStandardMaterial({
-                    map: texture,
-                    metalness: 0.1,
-                    roughness: 0.15,
-                    emissive: 0x000000,
-                    emissiveIntensity: 0
+            // ---------------- UI ----------------
+            bindUI() {
+                $('btnLeft').onclick = () => this.togglePanel('leftPanel');
+                $('btnRight').onclick = () => this.togglePanel('rightPanel');
+
+                $('namesInput').addEventListener('input', () => {
+                    this.settings.namesText = $('namesInput').value;
+                    this.refresh();
                 });
-                
-                const card = new THREE.Mesh(geometry, material);
-                card.castShadow = true;
-                card.receiveShadow = true;
+                $('btnClear').onclick = () => {
+                    const btn = $('btnClear');
+                    // Confirmation en deux clics (pas de boîte de dialogue)
+                    if ($('namesInput').value.trim() && !btn.dataset.armed) {
+                        btn.dataset.armed = '1';
+                        btn.textContent = '⚠️ Confirmer ?';
+                        clearTimeout(this.clearTimer);
+                        this.clearTimer = setTimeout(() => { delete btn.dataset.armed; btn.textContent = '🗑️ Vider'; }, 3000);
+                        return;
+                    }
+                    clearTimeout(this.clearTimer);
+                    delete btn.dataset.armed;
+                    btn.textContent = '🗑️ Vider';
+                    this.setNames('');
+                };
+                $('btnExample').onclick = () => this.setNames(EXAMPLE_NAMES.join('\n'));
+                $('btnImport').onclick = () => $('fileInput').click();
+                $('fileInput').onchange = (e) => this.importFile(e.target.files[0]);
 
-                const ropeGeometry = new THREE.CylinderGeometry(0.025, 0.025, 5.5, 12);
-                const ropeMaterial = new THREE.MeshStandardMaterial({
-                    color: 0x888888,
-                    roughness: 0.4,
-                    metalness: 0.2
-                });
-                const rope = new THREE.Mesh(ropeGeometry, ropeMaterial);
+                $('btnOnbNames').onclick = () => {
+                    $('onboarding').classList.add('hidden');
+                    this.togglePanel('leftPanel', true);
+                    setTimeout(() => $('namesInput').focus(), 300);
+                };
+                $('btnOnbExample').onclick = () => {
+                    $('onboarding').classList.add('hidden');
+                    this.setNames(EXAMPLE_NAMES.join('\n'));
+                    this.togglePanel('rightPanel', true);
+                };
 
-                const angle = (index / Math.max(total - 1, 1)) * Math.PI - Math.PI / 2;
-                const radius = 12;
-                card.position.set(Math.cos(angle) * radius, 8.5, Math.sin(angle) * radius);
-                rope.position.copy(card.position);
-                rope.position.y += 3;
-
-                const group = new THREE.Group();
-                group.add(card);
-                group.add(rope);
-                this.state.scene.add(group);
-
-                return { card, rope, group, name: studentName };
-            },
-
-            createBasket(index, totalBaskets) {
-                const geometry = new THREE.CylinderGeometry(1.6, 1.3, 2.2, 28);
-                const material = new THREE.MeshStandardMaterial({
-                    color: 0x8B5A2B,
-                    roughness: 0.75,
-                    metalness: 0.05,
-                    emissive: 0x6B4423,
-                    emissiveIntensity: 0
-                });
-                
-                const basket = new THREE.Mesh(geometry, material);
-                basket.castShadow = true;
-                basket.receiveShadow = true;
-
-                const handleGeometry = new THREE.TorusGeometry(0.38, 0.065, 10, 28, Math.PI);
-                const handleMaterial = new THREE.MeshStandardMaterial({
-                    color: 0x6B4423,
-                    roughness: 0.8,
-                    metalness: 0.05
-                });
-                
-                const handleLeft = new THREE.Mesh(handleGeometry, handleMaterial);
-                const handleRight = new THREE.Mesh(handleGeometry, handleMaterial);
-                
-                handleLeft.position.set(-1.5, 1.2, 0);
-                handleLeft.rotation.z = Math.PI / 2;
-                handleLeft.castShadow = true;
-                
-                handleRight.position.set(1.5, 1.2, 0);
-                handleRight.rotation.z = Math.PI / 2;
-                handleRight.castShadow = true;
-
-                basket.add(handleLeft);
-                basket.add(handleRight);
-
-                const spacing = 5;
-                const totalWidth = (totalBaskets - 1) * spacing;
-                basket.position.set(index * spacing - totalWidth / 2, 1, -8);
-
-                this.state.scene.add(basket);
-
-                return { mesh: basket, students: [], capacity: 0 };
-            },
-
-            initializeScene(numGroups) {
-                this.state.nameCards = this.state.students.map((name, i) => 
-                    this.createNameCard(name, i, this.state.students.length)
-                );
-                this.state.baskets = Array(numGroups).fill(0).map((_, i) => 
-                    this.createBasket(i, numGroups)
-                );
-            },
-
-            // ========== UI UPDATES ==========
-            updateStudentList() {
-                const container = document.getElementById('studentList');
-                container.innerHTML = '';
-                
-                this.state.students.forEach((name, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'student-item';
-                    
-                    const number = document.createElement('span');
-                    number.className = 'student-number';
-                    number.textContent = index + 1;
-                    
-                    const nameSpan = document.createElement('span');
-                    nameSpan.className = 'student-name';
-                    nameSpan.textContent = name;
-                    
-                    div.appendChild(number);
-                    div.appendChild(nameSpan);
-                    container.appendChild(div);
-                });
-                
-                document.getElementById('studentCount').textContent = this.state.students.length;
-                document.getElementById('totalCount').textContent = this.state.students.length;
-            },
-
-            updateBasketStatus() {
-                const container = document.getElementById('basketList');
-                container.innerHTML = '';
-                
-                this.state.baskets.forEach((b, i) => {
-                    const div = document.createElement('div');
-                    div.className = 'basket-item';
-                    
-                    const name = document.createElement('div');
-                    name.className = 'basket-item-name';
-                    name.textContent = `📦 Groupe ${i + 1}`;
-                    
-                    const fill = document.createElement('div');
-                    fill.className = 'basket-item-fill';
-                    fill.textContent = `${b.students.length}/${b.capacity} étud.`;
-                    
-                    div.appendChild(name);
-                    div.appendChild(fill);
-                    container.appendChild(div);
+                $('titleInput').addEventListener('input', () => {
+                    this.settings.title = $('titleInput').value;
+                    this.updateHeader();
+                    this.save();
                 });
 
-                document.getElementById('basketStatusContainer').classList.add('active');
-            },
-
-            updateProgress(count) {
-                document.getElementById('progressCount').textContent = count;
-                const percent = (count / this.state.students.length) * 100;
-                document.getElementById('progressFill').style.width = percent + '%';
-            },
-
-            // ========== PANEL TOGGLES ==========
-            toggleLeftPanel() {
-                document.getElementById('leftPanel').classList.toggle('active');
-                document.getElementById('rightPanel').classList.remove('active');
-            },
-
-            toggleRightPanel() {
-                document.getElementById('rightPanel').classList.toggle('active');
-                document.getElementById('leftPanel').classList.remove('active');
-            },
-
-            // ========== EDIT MODAL ==========
-            openEditModal() {
-                if (this.state.isDrawing) return;
-                this.state.editingStudents = [...this.state.students];
-                this.renderEditForm();
-                document.getElementById('modalOverlay').classList.add('active');
-                document.getElementById('editModal').classList.add('active');
-            },
-
-            closeEditModal() {
-                document.getElementById('modalOverlay').classList.remove('active');
-                document.getElementById('editModal').classList.remove('active');
-            },
-
-            renderEditForm() {
-                const container = document.getElementById('editFormContainer');
-                container.innerHTML = '';
-                
-                this.state.editingStudents.forEach((name, index) => {
-                    const group = document.createElement('div');
-                    group.className = 'edit-form-group';
-                    
-                    const label = document.createElement('label');
-                    label.textContent = `Étudiant ${index + 1}`;
-                    
-                    const inputContainer = document.createElement('div');
-                    inputContainer.className = 'edit-form-container';
-                    
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.value = name;
-                    input.onchange = (e) => this.state.editingStudents[index] = e.target.value.trim();
-                    
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'delete-btn';
-                    deleteBtn.textContent = '✕';
-                    deleteBtn.onclick = () => {
-                        this.state.editingStudents.splice(index, 1);
-                        this.renderEditForm();
+                $('modeSwitch').querySelectorAll('button').forEach(b => {
+                    b.onclick = () => {
+                        this.settings.mode = b.dataset.mode;
+                        this.applySettingsToUI();
+                        this.refresh();
                     };
-                    
-                    inputContainer.appendChild(input);
-                    inputContainer.appendChild(deleteBtn);
-                    group.appendChild(label);
-                    group.appendChild(inputContainer);
-                    container.appendChild(group);
                 });
+                $('groupValue').addEventListener('input', () => {
+                    const v = parseInt($('groupValue').value, 10);
+                    if (this.settings.mode === 'count') this.settings.count = v; else this.settings.size = v;
+                    this.refresh();
+                });
+                $('btnMinus').onclick = () => this.stepValue(-1);
+                $('btnPlus').onclick = () => this.stepValue(1);
+                $('remainderSelect').onchange = () => {
+                    this.settings.remainder = $('remainderSelect').value;
+                    this.refresh();
+                };
+                $('groupNamesInput').addEventListener('input', () => {
+                    this.settings.groupNamesText = $('groupNamesInput').value;
+                    this.refresh();
+                });
+                $('speedSelect').onchange = () => {
+                    this.settings.speed = $('speedSelect').value;
+                    this.save();
+                };
+
+                $('btnStart').onclick = () => this.startDraw();
+                $('btnReset').onclick = () => this.reset();
+                $('btnSkip').onclick = () => { this.skip = true; if (this.stage) this.stage.finishCurrent(); };
+
+                $('overlay').onclick = () => this.closeResults();
+                $('btnClose').onclick = () => this.closeResults();
+                $('btnAgain').onclick = () => { this.closeResults(); this.startDraw(); };
+                $('btnCopy').onclick = () => this.copyResults();
+                $('btnCsv').onclick = () => this.exportCsv();
+
+                window.addEventListener('keydown', (e) => this.onKey(e));
             },
 
-            addNewStudent() {
-                this.state.editingStudents.push('Nouvel Étudiant');
-                this.renderEditForm();
+            applySettingsToUI() {
+                const s = this.settings;
+                $('titleInput').value = s.title;
+                $('namesInput').value = s.namesText;
+                $('groupNamesInput').value = s.groupNamesText;
+                $('speedSelect').value = SPEEDS[s.speed] !== undefined ? s.speed : 'normal';
+                $('remainderSelect').value = s.remainder;
+                $('modeSwitch').querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.mode === s.mode));
+                $('groupValueLabel').textContent = s.mode === 'count' ? 'Nombre de groupes' : 'Personnes par groupe';
+                $('groupValue').value = s.mode === 'count' ? s.count : s.size;
+                $('remainderField').classList.toggle('hidden', s.mode !== 'size');
+                this.updateHeader();
             },
 
-            saveChanges() {
-                this.state.editingStudents = this.state.editingStudents.filter(name => name.trim() !== '');
-                if (this.state.editingStudents.length === 0) {
-                    alert('Au moins 1 étudiant requis!');
+            togglePanel(id, forceOpen) {
+                const other = id === 'leftPanel' ? 'rightPanel' : 'leftPanel';
+                const el = $(id);
+                const open = forceOpen === true ? true : !el.classList.contains('active');
+                el.classList.toggle('active', open);
+                if (open) $(other).classList.remove('active');
+            },
+
+            stepValue(delta) {
+                const input = $('groupValue');
+                const v = Math.max(1, (parseInt(input.value, 10) || 0) + delta);
+                input.value = v;
+                input.dispatchEvent(new Event('input'));
+            },
+
+            setNames(text) {
+                $('namesInput').value = text;
+                this.settings.namesText = text;
+                this.refresh();
+            },
+
+            importFile(file) {
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const isCsv = /\.csv$/i.test(file.name) || file.type === 'text/csv';
+                    const text = parseImportedFile(String(reader.result), isCsv);
+                    const current = $('namesInput').value.trim();
+                    this.setNames(current ? current + '\n' + text : text);
+                    this.toast(`📂 ${parseNames(text).length} nom(s) importé(s)`);
+                };
+                reader.readAsText(file, 'utf-8');
+                $('fileInput').value = '';
+            },
+
+            groupInfos() {
+                const custom = this.settings.groupNamesText.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+                return (this.plan.capacities || []).map((cap, i) => ({
+                    name: custom[i] || `Groupe ${i + 1}`,
+                    color: PALETTE[i % PALETTE.length],
+                    capacity: cap
+                }));
+            },
+
+            // Recalcule tout après une modification
+            // rebuild : 'now' (immédiat), 'later' (après la frappe) ou 'none'
+            refresh(rebuild = 'later') {
+                if (this.drawing) return;
+                this.names = parseNames(this.settings.namesText);
+                const s = this.settings;
+                this.plan = computePlan(this.names.length, s.mode, s.mode === 'count' ? s.count : s.size, s.remainder);
+
+                $('namesCount').textContent = this.names.length;
+                const seen = new Set(), dups = new Set();
+                this.names.forEach(n => { const k = n.toLowerCase(); seen.has(k) ? dups.add(n) : seen.add(k); });
+                $('dupWarn').classList.toggle('hidden', dups.size === 0);
+                $('dupWarn').textContent = dups.size ? `⚠️ Doublon(s) : ${[...dups].join(', ')}` : '';
+
+                const prev = $('planPreview');
+                if (this.plan.error) {
+                    prev.className = 'plan-preview error';
+                    prev.textContent = '⚠️ ' + this.plan.error;
+                } else {
+                    prev.className = 'plan-preview';
+                    prev.innerHTML = describePlan(this.plan.capacities);
+                }
+                $('btnStart').disabled = !!this.plan.error;
+                if (this.names.length >= 2) $('onboarding').classList.add('hidden');
+
+                this.results = null;
+                this.updateHeader();
+                this.updateProgress(0);
+                this.renderGroupBar();
+                this.save();
+
+                clearTimeout(this.rebuildTimer);
+                if (rebuild === 'now') this.rebuildScene();
+                else if (rebuild === 'later') this.rebuildTimer = setTimeout(() => this.rebuildScene(), 350);
+            },
+
+            rebuildScene() {
+                if (!this.stage || this.drawing) return;
+                this.stage.build(this.names, this.plan.error ? [] : this.groupInfos());
+            },
+
+            save() { storage.save(this.settings); },
+
+            updateHeader() {
+                const title = (this.settings.title || '').trim() || 'Tirage au sort';
+                $('classTitle').textContent = '🎲 ' + title;
+                document.title = `${title} · Tirage au sort 3D`;
+                const n = this.names.length;
+                const g = this.plan && !this.plan.error ? this.plan.capacities.length : 0;
+                $('subtitle').textContent = n
+                    ? `${n} participant${n > 1 ? 's' : ''}${g ? ` · ${g} groupes` : ''}`
+                    : 'Ajoutez des participants pour commencer';
+            },
+
+            renderGroupBar() {
+                if (!this.plan || this.plan.error) { $('groupBar').innerHTML = ''; return; }
+                const groups = this.groupInfos();
+                this.renderGroupBarFrom(groups, groups.map(() => []));
+            },
+
+            updateProgress(n) {
+                const total = this.names.length;
+                $('progressCount').textContent = n;
+                $('progressTotal').textContent = total;
+                $('progressFill').style.width = total ? (n / total) * 100 + '%' : '0';
+                $('hudCount').textContent = `${n}/${total}`;
+            },
+
+            announce(who, where, color) {
+                $('announceWho').textContent = who;
+                $('announceWhere').textContent = where ? '→ ' + where : '';
+                $('announceWhere').style.color = color || 'var(--gold)';
+                if (!window.gsap) return;
+                gsap.killTweensOf('#announce');
+                gsap.fromTo('#announce', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.25 });
+            },
+
+            hideAnnounce() {
+                if (window.gsap) gsap.to('#announce', { opacity: 0, duration: 0.4 });
+            },
+
+            // ---------------- Tirage ----------------
+            makeAssignment() {
+                const groups = this.groupInfos();
+                const caps = rng.shuffle(groups.map(g => g.capacity));
+                groups.forEach((g, i) => { g.capacity = caps[i]; });
+                const order = rng.shuffle(this.names.map((_, i) => i));
+                const filled = groups.map(() => 0);
+                const steps = order.map(idx => {
+                    const open = groups.map((g, i) => i).filter(i => filled[i] < groups[i].capacity);
+                    const g = open[rng.int(open.length)];
+                    filled[g]++;
+                    return { idx, g };
+                });
+                return { groups, steps };
+            },
+
+            async startDraw() {
+                if (this.drawing) return;
+                this.closeResults();
+                this.refresh('none');
+                if (this.plan.error) {
+                    this.toast('⚠️ ' + this.plan.error);
+                    this.togglePanel(this.names.length < 2 ? 'leftPanel' : 'rightPanel', true);
                     return;
                 }
-                
-                this.state.students = this.state.editingStudents;
-                this.updateStudentList();
-                this.closeEditModal();
-                
-                const numGroups = Math.min(parseInt(document.getElementById('groupCount').value), this.state.students.length);
-                document.getElementById('groupCount').value = numGroups;
-                this.resetDrawing();
-            },
+                const { groups, steps } = this.makeAssignment();
+                const members = groups.map(() => []);
+                const speed = SPEEDS[this.settings.speed] ?? 1;
 
-            // ========== ANIMATIONS ==========
-            async animateSelection(cardObj) {
-                return new Promise(resolve => {
-                    const tl = gsap.timeline({ onComplete: resolve });
-                    
-                    tl.to(cardObj.card.material, {
-                        emissiveIntensity: 0.9,
-                        duration: 0.4,
-                        ease: "power2.out"
-                    }, 0);
+                this.drawing = true;
+                this.skip = false;
+                this.setDrawingUI(true);
 
-                    tl.to(cardObj.card.scale, {
-                        x: 1.18,
-                        y: 1.18,
-                        z: 1.18,
-                        duration: 0.35,
-                        ease: "back.out"
-                    }, 0);
-
-                    tl.to(cardObj.card.material, {
-                        emissiveIntensity: 0,
-                        duration: 0.35,
-                        ease: "power2.in"
-                    }, 0.4);
-
-                    tl.to(cardObj.card.scale, {
-                        x: 1,
-                        y: 1,
-                        z: 1,
-                        duration: 0.25,
-                        ease: "power2.out"
-                    }, 0.4);
-                });
-            },
-
-            async animateFall(cardObj, basketObj) {
-                return new Promise(resolve => {
-                    const basketPos = basketObj.mesh.position.clone();
-                    const endPos = new THREE.Vector3(basketPos.x, basketPos.y + 2.5, basketPos.z);
-
-                    const tl = gsap.timeline({ onComplete: resolve });
-
-                    tl.to(cardObj.rope.scale, { y: 0, duration: 0.25 }, 0);
-
-                    tl.to(cardObj.card.position, {
-                        x: endPos.x,
-                        y: endPos.y,
-                        z: endPos.z,
-                        duration: 1.8,
-                        ease: "power2.in"
-                    }, 0.25);
-
-                    tl.to(cardObj.card.rotation, {
-                        x: Math.PI * 4.5,
-                        y: Math.PI * 3.2,
-                        z: Math.PI * 1.8,
-                        duration: 1.8,
-                        ease: "sine.inOut"
-                    }, 0.25);
-
-                    tl.to(this.state.camera.position, {
-                        x: endPos.x * 0.35,
-                        y: endPos.y + 3.5,
-                        z: endPos.z + 6,
-                        duration: 1.8,
-                        ease: "power1.inOut"
-                    }, 0.25);
-
-                    tl.to(cardObj.card.position, {
-                        y: basketPos.y + 0.7,
-                        duration: 0.5,
-                        ease: "bounce.out"
-                    }, 2.05);
-
-                    tl.to(basketObj.mesh.position, {
-                        y: basketPos.y + 0.18,
-                        duration: 0.18,
-                        repeat: 1,
-                        yoyo: true
-                    }, 2.05);
-
-                    tl.to(this.state.camera.position, {
-                        x: 0,
-                        y: 12,
-                        z: 15,
-                        duration: 0.6,
-                        ease: "power2.inOut"
-                    }, 2.55);
-                });
-            },
-
-            async celebrateCompletion() {
-                return new Promise(resolve => {
-                    gsap.to(this.state.camera.position, {
-                        x: Math.sin(Date.now() * 0.001) * 22,
-                        y: 20,
-                        z: Math.cos(Date.now() * 0.001) * 22,
-                        duration: 2.2,
-                        ease: "sine.inOut",
-                        onComplete: () => {
-                            this.state.camera.position.set(0, 12, 15);
-                            this.showResults();
-                            resolve();
-                        }
-                    });
-
-                    this.state.baskets.forEach((b, i) => {
-                        gsap.to(b.mesh.material, {
-                            emissiveIntensity: 0.6,
-                            duration: 0.6,
-                            delay: i * 0.12,
-                            repeat: 4,
-                            yoyo: true,
-                            ease: "power2.inOut"
-                        });
-                    });
-                });
-            },
-
-            // ========== DRAWING LOGIC ==========
-            calculateBalancedDistribution(totalStudents, numGroups) {
-                const baseSize = Math.floor(totalStudents / numGroups);
-                const remainder = totalStudents % numGroups;
-                
-                const capacities = [];
-                for (let i = 0; i < numGroups; i++) {
-                    capacities.push(i < remainder ? baseSize + 1 : baseSize);
+                const st = this.stage;
+                if (st) {
+                    // Les capacités ont été mélangées : on met à jour les étiquettes des paniers
+                    st.build(this.names, groups);
                 }
-                
-                for (let i = capacities.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [capacities[i], capacities[j]] = [capacities[j], capacities[i]];
-                }
-                
-                return capacities;
-            },
+                this.renderGroupBarFrom(groups, members);
 
-            async startLiveDrawing(numGroups) {
-                this.state.isDrawing = true;
-                document.getElementById('startBtn').disabled = true;
-                document.getElementById('resetBtn').disabled = true;
-                document.getElementById('leftPanel').classList.remove('active');
-                document.getElementById('rightPanel').classList.remove('active');
-
-                let availableStudents = [...Array(this.state.students.length)].map((_, i) => i);
-                
-                const capacities = this.calculateBalancedDistribution(this.state.students.length, numGroups);
-                
-                this.state.baskets.forEach((b, i) => {
-                    b.students = [];
-                    b.capacity = capacities[i];
-                });
-
-                await this.shufflePhase();
-
-                let drawn = 0;
-
-                while (availableStudents.length > 0) {
-                    const randomIdx = Math.floor(Math.random() * availableStudents.length);
-                    const studentIdx = availableStudents[randomIdx];
-                    const cardObj = this.state.nameCards[studentIdx];
-
-                    const availableBaskets = this.state.baskets.filter(b => b.students.length < b.capacity);
-                    if (availableBaskets.length === 0) break;
-
-                    const basketIdx = Math.floor(Math.random() * availableBaskets.length);
-                    const targetBasket = availableBaskets[basketIdx];
-
-                    await this.drawCardSequence(cardObj, targetBasket, drawn);
-
-                    targetBasket.students.push(this.state.students[studentIdx]);
-                    availableStudents.splice(randomIdx, 1);
-                    
-                    drawn++;
-                    this.updateProgress(drawn);
-                    this.updateBasketStatus();
-
-                    await new Promise(r => setTimeout(r, 400));
+                if (st && speed > 0) {
+                    await new Promise(r => setTimeout(r, 700));
+                    await st.shuffle(speed);
                 }
 
-                await this.celebrateCompletion();
-
-                this.state.isDrawing = false;
-                document.getElementById('startBtn').disabled = false;
-                document.getElementById('resetBtn').disabled = false;
-            },
-
-            async shufflePhase() {
-                const shuffleDuration = 3.5;
-                const startTime = Date.now();
-                
-                return new Promise(resolve => {
-                    const shuffleInterval = setInterval(() => {
-                        const elapsed = Date.now() - startTime;
-                        
-                        if (elapsed >= shuffleDuration * 1000) {
-                            clearInterval(shuffleInterval);
-                            
-                            this.state.nameCards.forEach((c, index) => {
-                                const angle = (index / Math.max(this.state.students.length - 1, 1)) * Math.PI - Math.PI / 2;
-                                const radius = 12;
-                                c.card.position.set(Math.cos(angle) * radius, 8.5, Math.sin(angle) * radius);
-                                c.card.rotation.set(0, 0, 0);
-                                c.rope.scale.y = 1;
-                            });
-                            
-                            resolve();
-                            return;
-                        }
-
-                        const progress = elapsed / (shuffleDuration * 1000);
-                        const speedMultiplier = 1 + progress * 1.5;
-                        
-                        this.state.nameCards.forEach((c, index) => {
-                            const randomRotation = (Math.random() - 0.5) * 0.8;
-                            const randomPosX = (Math.random() - 0.5) * 0.4;
-                            const randomPosZ = (Math.random() - 0.5) * 0.4;
-                            
-                            c.card.rotation.x = randomRotation * 0.3;
-                            c.card.rotation.z = randomRotation + Math.sin(elapsed * 0.008) * 0.15;
-                            c.card.position.x += randomPosX;
-                            c.card.position.z += randomPosZ;
-                        });
-
-                        this.state.nameCards.forEach((c, index) => {
-                            const angle = (elapsed / 1000) * (Math.PI * 2) * 2 * speedMultiplier;
-                            const baseAngle = (index / Math.max(this.state.students.length - 1, 1)) * Math.PI - Math.PI / 2;
-                            const radius = 12 + Math.sin(elapsed * 0.005) * 1.2;
-                            
-                            c.card.position.x = Math.cos(baseAngle + angle) * radius;
-                            c.card.position.z = Math.sin(baseAngle + angle) * radius;
-                            
-                            c.card.rotation.y += 0.18 * speedMultiplier;
-                        });
-                    }, 16);
-                });
-            },
-
-            async drawCardSequence(cardObj, basketObj, index) {
-                const basketPos = basketObj.mesh.position.clone();
-                const endPos = new THREE.Vector3(basketPos.x, basketPos.y + 2.5, basketPos.z);
-
-                return new Promise(resolve => {
-                    const tl = gsap.timeline({ onComplete: resolve });
-
-                    tl.to(cardObj.card.material, {
-                        emissiveIntensity: 1,
-                        duration: 0.3,
-                        ease: "power2.out"
-                    }, 0);
-
-                    tl.to(cardObj.card.scale, {
-                        x: 1.2,
-                        y: 1.2,
-                        z: 1.2,
-                        duration: 0.25,
-                        ease: "back.out"
-                    }, 0);
-
-                    tl.to(cardObj.rope.scale, { y: 0, duration: 0.2 }, 0.1);
-
-                    tl.to(cardObj.card.position, {
-                        x: endPos.x,
-                        y: endPos.y,
-                        z: endPos.z,
-                        duration: 1.2,
-                        ease: "power2.in"
-                    }, 0.3);
-
-                    tl.to(cardObj.card.rotation, {
-                        x: Math.PI * 5,
-                        y: Math.PI * 3.5,
-                        z: Math.PI * 2,
-                        duration: 1.2,
-                        ease: "sine.inOut"
-                    }, 0.3);
-
-                    tl.to(cardObj.card.position, {
-                        y: basketPos.y + 0.7,
-                        duration: 0.4,
-                        ease: "bounce.out"
-                    }, 1.5);
-
-                    tl.to(basketObj.mesh.position, {
-                        y: basketPos.y + 0.15,
-                        duration: 0.15,
-                        repeat: 1,
-                        yoyo: true
-                    }, 1.5);
-                });
-            },
-
-            startDrawing() {
-                if (this.state.isDrawing || this.state.students.length < 2) {
-                    alert('Minimum 2 étudiants requis!');
-                    return;
-                }
-                
-                const numGroups = parseInt(document.getElementById('groupCount').value);
-                if (numGroups < 2 || numGroups > 6) {
-                    alert('Nombre de groupes: 2-6');
-                    return;
-                }
-
-                if (numGroups > this.state.students.length) {
-                    alert(`Maximum ${this.state.students.length} groupes possibles!`);
-                    return;
-                }
-
-                this.resetDrawing();
-                
-                setTimeout(() => {
-                    this.state.baskets = this.state.baskets.slice(0, numGroups);
-                    this.startLiveDrawing(numGroups);
-                }, 400);
-            },
-
-            resetDrawing() {
-                if (this.state.isDrawing) return;
-
-                this.state.nameCards.forEach(c => {
-                    if (this.state.scene.getObjectByProperty('uuid', c.group.uuid)) {
-                        this.state.scene.remove(c.group);
+                for (let i = 0; i < steps.length; i++) {
+                    const { idx, g } = steps[i];
+                    const name = this.names[idx];
+                    const land = () => {
+                        members[g].push(name);
+                        this.updateProgress(i + 1);
+                        this.renderGroupBarFrom(groups, members, g);
+                    };
+                    if (st && speed > 0 && !this.skip) {
+                        this.announce(name, groups[g].name, groups[g].color);
+                        await st.dropCard(idx, g, speed, land);
+                        await new Promise(r => setTimeout(r, 180 * speed));
+                    } else {
+                        if (st) st.placeInstant(idx, g);
+                        land();
                     }
-                });
+                }
+                this.hideAnnounce();
 
-                this.state.nameCards = [];
-                this.state.baskets.forEach(b => {
-                    if (this.state.scene.getObjectByProperty('uuid', b.mesh.uuid)) {
-                        this.state.scene.remove(b.mesh);
-                    }
-                });
-                this.state.baskets = [];
-
-                document.getElementById('resultsModal').classList.remove('active');
-                document.getElementById('modalOverlay').classList.remove('active');
-                document.getElementById('basketStatusContainer').classList.remove('active');
-                document.getElementById('progressCount').textContent = '0';
-                document.getElementById('progressFill').style.width = '0%';
-
-                const numGroups = parseInt(document.getElementById('groupCount').value);
-                this.initializeScene(numGroups);
+                this.results = { groups, members, date: new Date() };
+                if (st) {
+                    st.celebrate();
+                    await new Promise(r => setTimeout(r, speed > 0 && !this.skip ? 1600 : 600));
+                }
+                this.drawing = false;
+                this.setDrawingUI(false);
+                this.showResults();
             },
 
+            renderGroupBarFrom(groups, members, bumpIndex) {
+                const bar = $('groupBar');
+                bar.innerHTML = '';
+                groups.forEach((g, i) => {
+                    const chip = document.createElement('div');
+                    chip.className = 'group-chip' + (i === bumpIndex ? ' bump' : '');
+                    const dot = document.createElement('span');
+                    dot.className = 'dot';
+                    dot.style.background = g.color;
+                    const name = document.createElement('span');
+                    name.textContent = g.name;
+                    const count = document.createElement('span');
+                    count.className = 'count';
+                    count.textContent = `${members[i].length}/${g.capacity}`;
+                    chip.append(dot, name, count);
+                    bar.appendChild(chip);
+                });
+                if (bumpIndex !== undefined) setTimeout(() => {
+                    const c = bar.children[bumpIndex];
+                    if (c) c.classList.remove('bump');
+                }, 350);
+            },
+
+            setDrawingUI(on) {
+                $('btnStart').disabled = on;
+                $('btnReset').disabled = on;
+                $('namesInput').disabled = on;
+                $('drawHud').classList.toggle('hidden', !on);
+                if (on) {
+                    $('leftPanel').classList.remove('active');
+                    $('rightPanel').classList.remove('active');
+                    $('onboarding').classList.add('hidden');
+                }
+            },
+
+            reset() {
+                if (this.drawing) return;
+                this.closeResults();
+                this.refresh('now');
+            },
+
+            // ---------------- Résultats ----------------
             showResults() {
-                const container = document.getElementById('resultsContainer');
-                container.innerHTML = '';
-                
-                this.state.baskets.forEach((b, i) => {
-                    const div = document.createElement('div');
-                    div.className = 'group-result';
-                    
-                    const title = document.createElement('div');
-                    title.className = 'group-result-title';
-                    title.textContent = `📦 Groupe ${i + 1}`;
-                    
-                    const members = document.createElement('div');
-                    members.className = 'group-result-members';
-                    members.innerHTML = b.students.map((s, idx) => `${idx + 1}. ${s}`).join('<br>');
-                    
-                    div.appendChild(title);
-                    div.appendChild(members);
-                    container.appendChild(div);
+                const r = this.results;
+                if (!r) return;
+                const grid = $('resultsGrid');
+                grid.innerHTML = '';
+                r.groups.forEach((g, i) => {
+                    const card = document.createElement('div');
+                    card.className = 'result-card';
+                    card.style.setProperty('--c', g.color);
+                    const h = document.createElement('h3');
+                    const t = document.createElement('div');
+                    t.textContent = g.name;
+                    const n = document.createElement('span');
+                    n.textContent = `${r.members[i].length} pers.`;
+                    h.append(t, n);
+                    const ol = document.createElement('ol');
+                    r.members[i].forEach(m => {
+                        const li = document.createElement('li');
+                        li.textContent = m;
+                        ol.appendChild(li);
+                    });
+                    card.append(h, ol);
+                    grid.appendChild(card);
                 });
-                
-                document.getElementById('modalOverlay').classList.add('active');
-                document.getElementById('resultsModal').classList.add('active');
+                const title = (this.settings.title || '').trim() || 'Tirage au sort';
+                $('resultsSub').textContent = `${title} · ${this.names.length} participants · ${r.date.toLocaleString('fr-FR')}`;
+                $('overlay').classList.add('active');
+                $('resultsModal').classList.add('active');
             },
 
-            exportResults() {
-                let csv = "Groupe,Nombres,Étudiants\n";
-                this.state.baskets.forEach((b, i) => {
-                    csv += `"Groupe ${i + 1}","${b.students.length}","${b.students.join('; ')}"\n`;
+            closeResults() {
+                $('overlay').classList.remove('active');
+                $('resultsModal').classList.remove('active');
+            },
+
+            resultsAsText() {
+                const r = this.results;
+                const title = (this.settings.title || '').trim() || 'Tirage au sort';
+                let out = `${title} — ${r.date.toLocaleDateString('fr-FR')}\n\n`;
+                r.groups.forEach((g, i) => {
+                    out += `${g.name} (${r.members[i].length})\n`;
+                    r.members[i].forEach(m => { out += `- ${m}\n`; });
+                    out += '\n';
                 });
-                
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `MIAD2-groupes-${new Date().toISOString().split('T')[0]}.csv`;
-                a.click();
+                return out.trim();
             },
 
-            // ========== RENDER LOOP ==========
-            animate() {
-                requestAnimationFrame(() => this.animate());
-
-                this.state.nameCards.forEach((c, i) => {
-                    if (!this.state.isDrawing || c.card.position.y > 2) {
-                        c.card.rotation.z = Math.sin(Date.now() * 0.0004 + i * 0.6) * 0.045;
-                    }
-                });
-
-                this.state.renderer.render(this.state.scene, this.state.camera);
-            },
-
-            // ========== WINDOW EVENTS ==========
-            onWindowResize() {
-                this.state.camera.aspect = window.innerWidth / window.innerHeight;
-                this.state.camera.updateProjectionMatrix();
-                this.state.renderer.setSize(window.innerWidth, window.innerHeight);
-            },
-
-            onKeyDown(e) {
-                if (e.code === 'Space' && !this.state.isDrawing) {
-                    e.preventDefault();
-                    this.startDrawing();
+            async copyResults() {
+                if (!this.results) return;
+                const text = this.resultsAsText();
+                try {
+                    await navigator.clipboard.writeText(text);
+                } catch (e) {
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    ta.remove();
                 }
-                if (e.code === 'KeyR' && !this.state.isDrawing) {
-                    this.resetDrawing();
+                this.toast('📋 Résultats copiés');
+            },
+
+            exportCsv() {
+                const r = this.results;
+                if (!r) return;
+                const esc = (v) => `"${String(v).replace(/"/g, '""')}"`;
+                const rows = [['Groupe', 'N°', 'Nom'].map(esc).join(';')];
+                r.groups.forEach((g, i) => {
+                    r.members[i].forEach((m, j) => rows.push([g.name, j + 1, m].map(esc).join(';')));
+                });
+                const blob = new Blob(['﻿' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const slug = ((this.settings.title || 'tirage').trim() || 'tirage')
+                    .normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase();
+                a.href = url;
+                a.download = `groupes-${slug}-${r.date.toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            },
+
+            toast(msg) {
+                const t = $('toast');
+                t.textContent = msg;
+                t.classList.add('show');
+                clearTimeout(this.toastTimer);
+                this.toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+            },
+
+            onKey(e) {
+                const tag = (e.target.tagName || '').toLowerCase();
+                const typing = tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable;
+                if (e.key === 'Escape') {
+                    this.closeResults();
+                    $('leftPanel').classList.remove('active');
+                    $('rightPanel').classList.remove('active');
+                    return;
+                }
+                if (typing || e.ctrlKey || e.metaKey || e.altKey) return;
+                if ($('resultsModal').classList.contains('active')) return;
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    if (this.drawing) $('btnSkip').click(); else this.startDraw();
+                } else if (e.code === 'KeyR' && !this.drawing) {
+                    this.reset();
                 }
             }
         };
 
-        // ========== DÉMARRAGE ==========
-        app.init();
+        App.init();
+        window.app = App;
+    })();
     </script>
 </body>
 </html>
-
