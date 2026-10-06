@@ -21,6 +21,7 @@
             --field-border: rgba(255, 255, 255, 0.14);
             --danger: #ff6b6b;
             --ok: #5ad19a;
+            color-scheme: dark;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1703,7 +1704,19 @@
                     this.refresh();
                 });
                 $('btnClear').onclick = () => {
-                    if (!$('namesInput').value.trim() || confirm('Effacer toute la liste ?')) this.setNames('');
+                    const btn = $('btnClear');
+                    // Confirmation en deux clics (pas de boîte de dialogue)
+                    if ($('namesInput').value.trim() && !btn.dataset.armed) {
+                        btn.dataset.armed = '1';
+                        btn.textContent = '⚠️ Confirmer ?';
+                        clearTimeout(this.clearTimer);
+                        this.clearTimer = setTimeout(() => { delete btn.dataset.armed; btn.textContent = '🗑️ Vider'; }, 3000);
+                        return;
+                    }
+                    clearTimeout(this.clearTimer);
+                    delete btn.dataset.armed;
+                    btn.textContent = '🗑️ Vider';
+                    this.setNames('');
                 };
                 $('btnExample').onclick = () => this.setNames(EXAMPLE_NAMES.join('\n'));
                 $('btnImport').onclick = () => $('fileInput').click();
