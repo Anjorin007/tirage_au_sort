@@ -2,7 +2,9 @@
 
 Formez des groupes aléatoires pour **n'importe quelle classe**, avec une animation en 3D : les noms sont accrochés à des cordes à linge, puis tombent un par un dans des paniers en osier.
 
-Tout tient dans un seul fichier `index.html` : il suffit de l'ouvrir dans un navigateur ou de l'héberger, par exemple sur GitHub Pages.
+Tout tient dans un seul fichier `index.html` : il suffit de l'ouvrir dans un navigateur ou de l'héberger.
+
+**Site en ligne :** https://anjorin007.github.io/tirage_au_sort/
 
 ## Utilisation
 
